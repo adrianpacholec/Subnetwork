@@ -50,6 +50,7 @@
     <Compile Include="RoutingController.cs" />
     <Compile Include="SNP.cs" />
     <Compile Include="SNPP.cs" />
+    <Compile Include="SubnetworkServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
