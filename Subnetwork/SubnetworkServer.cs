@@ -3,15 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CustomSocket;
-
 
 namespace Subnetwork
 {
-    class ConnectionController
+    class SubnetworkServer
     {
-        private List<CSocket> sockets;
-
-        
     }
 }
