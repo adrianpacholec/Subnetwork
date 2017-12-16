@@ -12,16 +12,16 @@ namespace Subnetwork
 {
     class SubnetworkServer
     {
-        ConnectionController cc;
-        RoutingController rc;
-        LinkResourceManager lrm;
-        CSocket csocket;
+        private static ConnectionController connectionController;
+        private static RoutingController routingController;
+        private static LinkResourceManager linkResourceManager;
+        private static CSocket csocket;
 
-        public SubnetworkServer(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
+        public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
-            this.cc = cc;
-            this.rc = rc;
-            this.lrm = lrm;
+            cc = cc;
+            rc = rc;
+            lrm = lrm;
             initListeningCustomSocket();
         }
 
@@ -49,7 +49,7 @@ namespace Subnetwork
         private void RealStart(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
             Socket connected=csocket.Accept();
-            waitForInputFromSocketInAnotherThread(connected);
+       
         }
 
         private void waitForInputFromSocketInAnotherThread(Socket connected)
@@ -60,8 +60,20 @@ namespace Subnetwork
 
         private void waitForInput()
         {
-           // Object receivedObject = csocket.ReceiveObject();
-           // if(receivedObject.GetType == )
+            Object receivedObject = csocket.ReceiveObject();
+            if(receivedObject.GetType() == typeof(List<SNPP>))
+            {
+                insertSNPPSToRC((List<SNPP>)receivedObject);
+            }
+               
+
         }
+
+        private void insertSNPPSToRC(List<SNPP> receivedList)
+        {
+            for (int i = 0; i < receivedList.Count; i++)
+                rc.addSNPP(receivedList.ElementAt(i));
+        }
+        
     }
 }
