@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class LinkResourceManager
+    class SNP
     {
-
     }
 }

@@ -12,9 +12,6 @@ namespace Subnetwork
     {
 
         private List<CSocket> sockets;
-
-        
-
         private string NetworkAddress, ParentNetworkAddress;
         public ConnectionController()
         {
@@ -24,36 +21,36 @@ namespace Subnetwork
         }
 
 
-        private List<SNPP> RouteTableQuery()
+        private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd)
         {
             return new List<SNPP>();
         }
 
-        private void LinkConnectionRequest()
+        private void LinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
         {
-
+          
 
         }
 
-        private void ConnectionRequestIn()
+        private bool ConnectionRequestIn(string pathBegin, string pathEnd)
         {
 
-
+            return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        private void ConnectionRequestOut()
+        private bool ConnectionRequestOut(string pathBegin, string pathEnd)
         {
-
+            return true; //Jesli polaczenie zestawiono poprawnie
         }
 
-        private void PeerCoordinationIn()
+        private bool PeerCoordinationIn(SNPP SNPPpathBegin, SNP SNPpathEnd)
         {
-
+            return true;
         }
 
-        private void PeerCoordinationOut()
+        private bool PeerCoordinationOut()
         {
-
+            return true;
         }
 
     }
