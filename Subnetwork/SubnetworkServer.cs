@@ -60,8 +60,8 @@ namespace Subnetwork
 
         private void waitForInput()
         {
-           // Object receivedObject = csocket.ReceiveObject();
-           // if(receivedObject.GetType == )
+            Object receivedObject = csocket.ReceiveObject();
+            if(receivedObject.GetType == )
         }
     }
 }

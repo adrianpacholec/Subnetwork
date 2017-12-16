@@ -9,5 +9,22 @@ namespace Subnetwork
     class LinkResourceManager
     {
 
+
+        private void SNPLinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
+        {
+
+        }
+
+        private bool SNPLinkConnectionDeallocation(string SNPpathBegin, string SNPpathEnd)
+        {
+            return true;
+        }
+
+        private void Topology(SNPP localTopologyUpdate)
+        {
+
+        }
+
+
     }
 }
