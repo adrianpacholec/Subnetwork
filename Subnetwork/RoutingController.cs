@@ -8,5 +8,19 @@ namespace Subnetwork
 {
     class RoutingController
     {
+        List<SNPP> snpps;
+      
+        public RoutingController()
+        {
+            snpps = new List<SNPP>();
+        }
+
+        public void addSNPP(SNPP snpp)
+        {
+            snpps.Add(snpp);
+        }
+
+
+
     }
 }

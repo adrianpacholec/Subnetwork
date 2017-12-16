@@ -28,8 +28,7 @@ namespace Subnetwork
 
         private void LinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
         {
-          
-
+            
         }
 
         private bool ConnectionRequestIn(string pathBegin, string pathEnd)
