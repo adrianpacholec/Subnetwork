@@ -33,6 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
@@ -60,7 +61,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\customSocket\CustomSocket.csproj">
+    <ProjectReference Include="..\..\..\..\..\Documents\Visual Studio 2015\Projects\CustomSocket\CustomSocket\CustomSocket.csproj">
       <Project>{a0c09126-9dd3-4857-8c90-ec2b090beb11}</Project>
       <Name>CustomSocket</Name>
     </ProjectReference>

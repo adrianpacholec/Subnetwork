@@ -27,6 +27,7 @@ namespace Subnetwork
         {
             //updatuje sobie SNPP w swojej liscie
 
+
         }
 
         private void NetworkTopologyIn(SNPP localTopologyUpdate)
@@ -38,7 +39,6 @@ namespace Subnetwork
         {
 
         }
-
 
     }
 }

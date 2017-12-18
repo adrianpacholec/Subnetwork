@@ -27,9 +27,10 @@ namespace Subnetwork
 
         private (SNPP begin, SNPP end) LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
         {
+
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
             return (new SNP(), new SNP());
-
+       
         }
 
         //#1

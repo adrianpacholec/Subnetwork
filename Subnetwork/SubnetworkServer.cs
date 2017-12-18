@@ -12,20 +12,25 @@ namespace Subnetwork
 {
     class SubnetworkServer
     {
-        ConnectionController cc;
-        RoutingController rc;
-        LinkResourceManager lrm;
-        CSocket csocket;
+        public const String CONNECTION_REQUEST = "connectionRequest";
+        public const String PEER_COORDINATION = "peerCoordination";
+        public const String SNPP_SUBNETWORK_INFORMATION = "snppSubnetworkInformation";
+        public const String NETWORK_TOPOLOGY = "networkTopology";
 
-        public SubnetworkServer(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
+        private static ConnectionController connectionController;
+        private static RoutingController routingController;
+        private static LinkResourceManager linkResourceManager;
+        private static CSocket csocket;
+
+        public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
-            this.cc = cc;
-            this.rc = rc;
-            this.lrm = lrm;
+            connectionController = cc;
+            routingController = rc;
+            linkResourceManager = lrm;
             initListeningCustomSocket();
         }
 
-        public void initListeningCustomSocket()
+        public static void initListeningCustomSocket()
         {
             String parentAddress = Config.getProperty("ParentSubnetworkAddress");
             IPAddress parentSubnetworkAddress = IPAddress.Parse(parentAddress);
@@ -33,35 +38,60 @@ namespace Subnetwork
             csocket = new CSocket(parentSubnetworkAddress, port);
         }
 
-        public void ListenForConnections()
+        public static void ListenForConnections()
         {
-
+            initListenThread();
         }
 
-        private Thread initListenThread(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
+        private static Thread initListenThread()
         {
-            var t = new Thread(() => RealStart(cc,rc,lrm));
+            var t = new Thread(() => RealStart());
             t.IsBackground = true;
             t.Start();
             return t;
         }
 
-        private void RealStart(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
+        private static void RealStart()
         {
             Socket connected=csocket.Accept();
-            waitForInputFromSocketInAnotherThread(connected);
+       
         }
 
-        private void waitForInputFromSocketInAnotherThread(Socket connected)
+        private static void waitForInputFromSocketInAnotherThread(Socket connected)
         {
             var t = new Thread(() => waitForInput());
             t.Start();
         }
 
-        private void waitForInput()
+        private static void waitForInput()
         {
-            Object receivedObject = csocket.ReceiveObject();
-            if(receivedObject.GetType == )
+            Tuple<String, Object> received = csocket.ReceiveObject();
+            String parameter = received.Item1;
+            Object receivedObject = received.Item2;
+            if (parameter.Equals(SNPP_SUBNETWORK_INFORMATION))
+            {
+                insertSNPPSToRC((List<SNPP>)receivedObject);
+            }
+            else if (parameter.Equals(CONNECTION_REQUEST))
+            {
+
+            }
+            else if (parameter.Equals(PEER_COORDINATION))
+            {
+
+            }
+            else if (parameter.Equals(NETWORK_TOPOLOGY))
+            {
+
+            }
+
         }
+
+        private static void insertSNPPSToRC(List<SNPP> receivedList)
+        {
+            for (int i = 0; i < receivedList.Count; i++)
+                routingController.addSNPP(receivedList.ElementAt(i));
+        }
+        
     }
 }
