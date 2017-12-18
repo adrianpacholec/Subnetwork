@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class SNP
+    class SNP : SNPP
     {
+        private int label;
+
+
     }
 }

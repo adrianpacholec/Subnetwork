@@ -8,5 +8,9 @@ namespace Subnetwork
 {
     class SNPP
     {
+        public string Address { get; set; };
+        private int capacity;
+
     }
+
 }

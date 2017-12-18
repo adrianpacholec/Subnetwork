@@ -8,19 +8,24 @@ namespace Subnetwork
 {
     class RoutingController
     {
+        private List<SNPP> SNPPList;
+
+        public RoutingController()
+        {
+            SNPPList = new List<SNPP>();
+        }
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd)
         {
+            //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
+            //2. Robi jakiegoś Djikstre
+            //3. Zwraca wyznaczoną ścieżkę
             return new List<SNPP>();
-
         }
 
-        private void LocalTopologyIn(SNPP localTopologyUpdate) {
-
-        }
-
-        private void LocalTopologyOut(SNPP localTopologyUpdate)
+        private void LocalTopologyIn(SNPP localTopologyUpdate)
         {
+            //updatuje sobie SNPP w swojej liscie
 
         }
 
