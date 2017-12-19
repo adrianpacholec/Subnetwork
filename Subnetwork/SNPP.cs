@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class SNPP
+    public class SNPP
     {
-        public string Address { get; set; };
-        private int capacity;
+        public string Address { get; set; }
+        public int Capacity { get; set; }
 
     }
 
