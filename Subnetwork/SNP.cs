@@ -6,15 +6,12 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class SNP : SNPP
+    public class SNP
     {
-        private int label;
 
-        public SNP(String address, int capacity, int label):base(address, capacity)
-        {
-            this.label = label;
-
-        }
-
+        public int Label { set; get; }
+        public string Address { get; set; }
+        public int OccupiedCapacity { get; set; }
+       
     }
 }

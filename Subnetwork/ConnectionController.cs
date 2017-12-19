@@ -10,7 +10,6 @@ namespace Subnetwork
 {
     class ConnectionController
     {
-
         private List<CSocket> sockets;
         private string NetworkAddress, ParentNetworkAddress;
         public ConnectionController()
@@ -25,10 +24,11 @@ namespace Subnetwork
             return new List<SNPP>();
         }
 
-       /* private Tuple<SNPP, SNPP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
+        private Tuple<SNPP, SNPP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
         {
 
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
+
             return new Tuple<SNPP, SNPP>(new SNP(), new SNP());
 
         }
@@ -40,32 +40,35 @@ namespace Subnetwork
 
             for (int index = 1; index < SNPPList.Count; index++)
             {
+                SNPP SNPPpathBegin = SNPPList[index - 1];
+                SNPP SNPPpathEnd = SNPPList[index];
 
-                var link = LinkConnectionRequest(SNPPList[index - 1], SNPPList[index]);
-                if ((link.begin.GetType() == typeof(SNPP)) && (link.end.GetType() == typeof(SNPP)))
+                if (CheckLinkSetPossible(SNPPpathBegin, SNPPpathEnd))
                 {
-                    //trzeba nizej zestawic tego linka
-                    if (ConnectionRequestOut(link.begin, link.end))
+                    Tuple<SNP, SNP> link = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+                else
+                {
+                    if (ConnectionRequestOut(SNPPpathBegin, SNPPpathEnd))
                     {
                         Console.WriteLine("Subnetwork Connection set properly");
-                        // polaczenie nizej zestawione poprawnie
                     }
                     else
                     {
                         Console.WriteLine("Epic fail");
-                        // gromki fail
+                        return false;
                     }
-
-                }
-                else if ((link.begin.GetType() == typeof(SNP)) && (link.end.GetType() == typeof(SNP)))
-                {
-                    //zestawiono pięknie
                 }
             }
-
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
-        */
+
+        private bool CheckLinkSetPossible(SNPP SNPPstart, SNPP SNPPend)
+        {
+
+            //sprawdza, czy ma taka pare na liscie
+            return true;
+        }
 
         private bool ConnectionRequestOut(SNPP pathBegin, SNPP pathEnd)
         {

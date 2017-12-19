@@ -6,21 +6,20 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class SNPP
+    public class SNPP
     {
         public string Address { get; set; }
-        private int capacity { get; set; }
-
+        public int Capacity { get; set; }
         public SNPP(String address, int capacity)
         {
-            this.Address = address;
-            this.capacity = capacity;
+            Address = address;
+            Capacity = capacity;
         }
-        
+
         override
         public String ToString()
         {
-            return "Address: " + Address + ", capacity: " + capacity;
+            return "Address: " + Address + ", capacity: " + Capacity;
         }
     }
 
