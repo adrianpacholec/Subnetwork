@@ -10,6 +10,11 @@ namespace Subnetwork
     {
         private int label;
 
+        public SNP(String address, int capacity, int label):base(address, capacity)
+        {
+            this.label = label;
+
+        }
 
     }
 }

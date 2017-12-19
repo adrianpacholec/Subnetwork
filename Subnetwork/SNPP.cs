@@ -8,9 +8,20 @@ namespace Subnetwork
 {
     class SNPP
     {
-        public string Address { get; set; };
-        private int capacity;
+        public string Address { get; set; }
+        private int capacity { get; set; }
 
+        public SNPP(String address, int capacity)
+        {
+            this.Address = address;
+            this.capacity = capacity;
+        }
+        
+        override
+        public String ToString()
+        {
+            return "Address: " + Address + ", capacity: " + capacity;
+        }
     }
 
 }

@@ -25,16 +25,16 @@ namespace Subnetwork
             return new List<SNPP>();
         }
 
-        private (SNPP begin, SNPP end) LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
+        private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
         {
 
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return (new SNP(), new SNP());
+            return null;
        
         }
 
         //#1
-        private bool ConnectionRequestIn(string pathBegin, string pathEnd)
+       /* private bool ConnectionRequestIn(string pathBegin, string pathEnd)
         {
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd);
 
@@ -65,6 +65,7 @@ namespace Subnetwork
 
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
+        */
 
         private bool ConnectionRequestOut(SNPP pathBegin, SNPP pathEnd)
         {
