@@ -11,9 +11,15 @@ namespace Subnetwork
         public const char PARAM_SEPARATOR = ' ';
         public const int ADDRESS_POSITION = 0;
         public const int CAPACITY_POSITION = 1;
+        public const int MASK_POSITION = 1;
+        public const int LINK_NODE_A_POSITION = 0;
+        public const int LINK_NODE_A_CAPACITY_POSITION = 1;
+        public const int LINK_NODE_B_POSITION = 2;
+        public const int LINK_NODE_B_CAPACITY_POSITION = 3;
         private List<LRM> LRMlist;
         private List<SNPP> myEdgeSNPPs;
-        private List<String> containedSubnetworksAddresses;
+        private List<SubnetworkAddress> containedSubnetworksAddresses;
+        private List<Link> links;
 
         public LinkResourceManager()
         {
@@ -21,37 +27,18 @@ namespace Subnetwork
             //dla kazdego SNPP z pliku utworz jego LRM
             LRMlist = new List<LRM>();
             myEdgeSNPPs = new List<SNPP>();
-            containedSubnetworksAddresses = new List<string>();
-            loadEdgeSNPPsFromFile();
+            links = new List<Link>();
+            containedSubnetworksAddresses = new List<SubnetworkAddress>();
             LoadContainedSubnetworks();
+            LoadLinks();
 
         }
 
-        private void loadEdgeSNPPsFromFile()
-        {
-            string fileName = Config.getProperty("EdgeSNPPsFileName");
-            string[] loadedFile = loadFile(fileName);
-            string[] snppParams = null;
-            foreach(string str in loadedFile)
-            {
-                snppParams = str.Split(PARAM_SEPARATOR);
-                addEdgeSNPP(snppParams);
-            }
-        }
 
         private string[] loadFile(String fileName)
         {
             string[] fileLines = System.IO.File.ReadAllLines(fileName);
             return fileLines;
-        }
-
-        private void addEdgeSNPP(string[] snppParams)
-        {
-            String snppAddress = snppParams[ADDRESS_POSITION];
-            int snppCapacity = Int32.Parse(snppParams[CAPACITY_POSITION]);
-            SNPP edgeSNPP = new Subnetwork.SNPP(snppAddress, snppCapacity);
-            myEdgeSNPPs.Add(edgeSNPP);
-            Console.WriteLine(edgeSNPP.ToString());
         }
 
         public void LoadContainedSubnetworks()
@@ -61,11 +48,38 @@ namespace Subnetwork
             string[] subnetworkParams = null;
             foreach(string str in loadedFile)
             {
-                containedSubnetworksAddresses.Add(str);
+                subnetworkParams = str.Split(PARAM_SEPARATOR);
+                containedSubnetworksAddresses.Add(new SubnetworkAddress(subnetworkParams[ADDRESS_POSITION], subnetworkParams[MASK_POSITION]));
                 Console.WriteLine(str);
             }
         }
 
+        public void LoadLinks()
+        {
+            string fileName = Config.getProperty("subnetworkLinks");
+            string[] loadedFile = loadFile(fileName);
+            string[] subnetworkParams = null;
+            string firstNodeAddress = null;
+            int firstNodeCapacity;
+            string secondNodeAddress = null;
+            int secondNodeCapacity;
+            SNPP firstSNPP = null;
+            SNPP secondSNPP = null;
+            foreach (string str in loadedFile)
+            {
+                subnetworkParams = str.Split(PARAM_SEPARATOR);
+                firstNodeAddress = subnetworkParams[LINK_NODE_A_POSITION];
+                firstNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_A_CAPACITY_POSITION]);
+                secondNodeAddress = subnetworkParams[LINK_NODE_B_POSITION];
+                secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
+                firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
+                secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
+                links.Add(new Link(firstSNPP, secondSNPP));
+                myEdgeSNPPs.Add(firstSNPP);
+                myEdgeSNPPs.Add(secondSNPP);
+                Console.WriteLine(str);
+            }
+        }
 
         class LRM
         {
