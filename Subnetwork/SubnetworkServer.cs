@@ -31,11 +31,13 @@ namespace Subnetwork
             connectionController = cc;
             routingController = rc;
             linkResourceManager = lrm;
+            SocketsByAddress = new Dictionary<string, CSocket>();
             String parentSubnetworkAddress = Config.getProperty("ParentSubnetworkAddress");
             if (parentSubnetworkAddress != null)
             {
                 int parentSubnetworkPort = Config.getIntegerProperty("ParentSubnetworkPort");
                 ConnectToParentSubnetwork(IPAddress.Parse(parentSubnetworkAddress), parentSubnetworkPort);
+                SendMySubnetworkInformation();
             }
             initListeningCustomSocket();
         }
@@ -43,6 +45,21 @@ namespace Subnetwork
         private static void ConnectToParentSubnetwork(IPAddress parentSubnetworkAddress, int parentSubnetworkPort)
         {
             toParentSocket = new CSocket(parentSubnetworkAddress, parentSubnetworkPort, CSocket.CONNECT_FUNCTION);
+        }
+
+        private static void SendMySubnetworkInformation()
+        {
+            object toSend = getSubnetworkInformation();
+            toParentSocket.SendObject(OPERATED_SUBNETWORK, toSend);
+
+        }
+
+        private static object getSubnetworkInformation()
+        {
+            Dictionary<string, string> mySubnetworkInformation = new Dictionary<string, string>();
+            string mySubnetworkAddress = Config.getProperty(OPERATED_SUBNETWORK);
+            mySubnetworkInformation.Add(OPERATED_SUBNETWORK, mySubnetworkAddress);
+            return mySubnetworkInformation;
         }
 
         public static void initListeningCustomSocket()
@@ -118,6 +135,7 @@ namespace Subnetwork
             Dictionary<string, string> receivedInformation = (Dictionary<string, string>)received.Item2;
             String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
             SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
+            Console.WriteLine("Subnetwork " + operatedSubnetwork + " connected");
         }
 
         private static void insertSNPPSToRC(List<SNPP> receivedList)
