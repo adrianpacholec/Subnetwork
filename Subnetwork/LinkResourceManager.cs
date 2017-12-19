@@ -22,7 +22,6 @@ namespace Subnetwork
             LRMlist = new List<LRM>();
             myEdgeSNPPs = new List<SNPP>();
             containedSubnetworksAddresses = new List<string>();
-            LRMlist.Add(new LRM(address));
             loadEdgeSNPPsFromFile();
             LoadContainedSubnetworks();
 
@@ -71,17 +70,17 @@ namespace Subnetwork
         class LRM
         {
             // posiada połączenie z SNPP
-            private string SNPPaddress;
+            private SNPP mySNPP;
             //jakiś socket?
 
-            public LRM(string SNPPaddress)
+            public LRM(string SNPPaddress, int capacity)
             {
-                this.SNPPaddress = SNPPaddress;
+                mySNPP = new Subnetwork.SNPP(SNPPaddress, capacity);
             }
 
             public string GetAddress()
             {
-                return SNPPaddress;
+                return mySNPP.Address;
             }
 
             public void SetConnection()
