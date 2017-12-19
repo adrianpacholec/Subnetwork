@@ -40,5 +40,9 @@ namespace Subnetwork
 
         }
 
+        internal void addSNPP(SNPP sNPP)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

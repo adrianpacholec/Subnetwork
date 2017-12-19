@@ -8,9 +8,10 @@ namespace Subnetwork
 {
     public class SNP
     {
+
         public int Label { set; get; }
         public string Address { get; set; }
         public int OccupiedCapacity { get; set; }
-
+       
     }
 }

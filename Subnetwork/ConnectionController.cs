@@ -28,6 +28,7 @@ namespace Subnetwork
         {
 
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
+
             return new Tuple<SNP, SNP>(new SNP(), new SNP());
 
         }
@@ -59,7 +60,6 @@ namespace Subnetwork
                     }
                 }
             }
-
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 

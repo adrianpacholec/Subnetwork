@@ -14,6 +14,7 @@ namespace Subnetwork
             RoutingController RC = new RoutingController();
             LinkResourceManager LRM = new LinkResourceManager();
             SubnetworkServer.init(CC, RC, LRM);
+            Console.ReadLine();
         }
     }
 }
