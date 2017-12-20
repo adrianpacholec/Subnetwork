@@ -18,7 +18,7 @@ namespace Subnetwork
         public const int LINK_NODE_B_CAPACITY_POSITION = 3;
         private List<LRM> LRMlist;
         private List<SNPP> myEdgeSNPPs;
-        private List<SubnetworkAddress> containedSubnetworksAddresses;
+
         private List<Link> links;
 
         public LinkResourceManager()
@@ -28,8 +28,6 @@ namespace Subnetwork
             LRMlist = new List<LRM>();
             myEdgeSNPPs = new List<SNPP>();
             links = new List<Link>();
-            containedSubnetworksAddresses = new List<SubnetworkAddress>();
-            LoadContainedSubnetworks();
             LoadLinks();
 
         }
@@ -41,18 +39,6 @@ namespace Subnetwork
             return fileLines;
         }
 
-        public void LoadContainedSubnetworks()
-        {
-            string fileName = Config.getProperty("ContainedSubnetworks");
-            string[] loadedFile = loadFile(fileName);
-            string[] subnetworkParams = null;
-            foreach(string str in loadedFile)
-            {
-                subnetworkParams = str.Split(PARAM_SEPARATOR);
-                containedSubnetworksAddresses.Add(new SubnetworkAddress(subnetworkParams[ADDRESS_POSITION], subnetworkParams[MASK_POSITION]));
-                Console.WriteLine(str);
-            }
-        }
 
         public void LoadLinks()
         {

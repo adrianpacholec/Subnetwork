@@ -10,12 +10,38 @@ namespace Subnetwork
 {
     class ConnectionController
     {
+        public const char PARAM_SEPARATOR = ' ';
+        public const int ADDRESS_POSITION = 0;
+        public const int MASK_POSITION = 1;
+
         private List<CSocket> sockets;
         private string NetworkAddress, ParentNetworkAddress;
+        private List<SubnetworkAddress> containedSubnetworksAddresses;
         public ConnectionController()
         {
             NetworkAddress = Config.getProperty("NetworkAddress");
             ParentNetworkAddress = Config.getProperty("ParentNetworkAddress");
+            containedSubnetworksAddresses = new List<SubnetworkAddress>();
+            LoadContainedSubnetworks();
+        }
+
+        public void LoadContainedSubnetworks()
+        {
+            string fileName = Config.getProperty("ContainedSubnetworks");
+            string[] loadedFile = loadFile(fileName);
+            string[] subnetworkParams = null;
+            foreach (string str in loadedFile)
+            {
+                subnetworkParams = str.Split(PARAM_SEPARATOR);
+                containedSubnetworksAddresses.Add(new SubnetworkAddress(subnetworkParams[ADDRESS_POSITION], subnetworkParams[MASK_POSITION]));
+                Console.WriteLine(str);
+            }
+        }
+
+        private string[] loadFile(String fileName)
+        {
+            string[] fileLines = System.IO.File.ReadAllLines(fileName);
+            return fileLines;
         }
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd)
@@ -29,7 +55,7 @@ namespace Subnetwork
 
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
 
-            return new Tuple<SNPP, SNPP>(new SNP(), new SNP());
+            return null;
 
         }
 
@@ -45,7 +71,7 @@ namespace Subnetwork
 
                 if (CheckLinkSetPossible(SNPPpathBegin, SNPPpathEnd))
                 {
-                    Tuple<SNP, SNP> link = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                    //Tuple<SNP, SNP> link = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
                 }
                 else
                 {
@@ -78,7 +104,7 @@ namespace Subnetwork
             return true;
         }
 
-        private bool PeerCoordinationIn(SNPP SNPPpathBegin, SNP SNPpathEnd)
+        public bool PeerCoordinationIn(SNP SNPPpathBegin, SNPP SNPpathEnd)
         {
             return true;
         }
