@@ -33,23 +33,33 @@ namespace Subnetwork
 
         }
 
-        //#1
-        private bool ConnectionRequestIn(string pathBegin, string pathEnd)
+        // % % % % % % % % % % % % % % % % % % % % % % % % % // 
+        // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
+        // % % % % % % % % % % % % % % % % % % % % % % % % % //
+
+        private bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
-            List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd);
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
+            List<SNP> SNPList; //TODO: nazwac to sensownie
 
-            for (int index = 1; index < SNPPList.Count; index++)
+
+            for (int index = 0; index < SNPPList.Count; index + 2)
             {
-                SNPP SNPPpathBegin = SNPPList[index - 1];
-                SNPP SNPPpathEnd = SNPPList[index];
+                SNPP SNPPpathBegin = SNPPList[index];
+                SNPP SNPPpathEnd = SNPPList[index + 1];
+                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                SNPList.Add(SNPpair.Item1);
+                SNPList.Add(SNPpair.Item2);
+            }
 
-                if (CheckLinkSetPossible(SNPPpathBegin, SNPPpathEnd))
+            for (int index = 0; index < SNPList.Count; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+
+                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
                 {
-                    Tuple<SNP, SNP> link = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
-                }
-                else
-                {
-                    if (ConnectionRequestOut(SNPPpathBegin, SNPPpathEnd))
+                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                     {
                         Console.WriteLine("Subnetwork Connection set properly");
                     }
@@ -59,22 +69,71 @@ namespace Subnetwork
                         return false;
                     }
                 }
+
             }
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        private bool CheckLinkSetPossible(SNPP SNPPstart, SNPP SNPPend)
+        private bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
+        {
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
+            List<SNP> SNPList; //TODO: nazwac to sensownie
+
+
+            for (int index = 0; index < SNPPList.Count; index + 2)
+            {
+                SNPP SNPPpathBegin = SNPPList[index];
+                SNPP SNPPpathEnd = SNPPList[index + 1];
+                
+                if (index == 0)
+                {
+                    Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPpathBegin, SNPPpathEnd);
+                }
+                else if (index == SNPPList.Count - 2)
+                {
+                    Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPpathEnd);
+                }
+                else
+                {
+                    Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+
+                SNPList.Add(SNPpair.Item1);
+                SNPList.Add(SNPpair.Item2);
+            }
+
+            for (int index = 0; index < SNPList.Count; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+
+                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                {
+                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    {
+                        Console.WriteLine("Subnetwork Connection set properly");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Epic fail");
+                        return false;
+                    }
+                }
+
+            }
+            return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+
+        private bool IsOnLinkList(SNP SNPstart, SNP SNPend)
         {
 
             //sprawdza, czy ma taka pare na liscie
             return true;
         }
 
-        private bool ConnectionRequestOut(SNPP pathBegin, SNPP pathEnd)
+        private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
             //wysyla do cc poziom niżej wiadomosc connection request
-            //skąd wie, do którego cc ma wyslac?
-
             return true;
         }
 

@@ -15,7 +15,7 @@ namespace Subnetwork
             SNPPList = new List<SNPP>();
         }
 
-        private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd)
+        private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
             //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
             //2. Robi jakiegoś Djikstre
@@ -40,7 +40,7 @@ namespace Subnetwork
 
         }
 
-        internal void addSNPP(SNPP sNPP)
+        internal void AddSNPP(SNPP snpp)
         {
             throw new NotImplementedException();
         }
