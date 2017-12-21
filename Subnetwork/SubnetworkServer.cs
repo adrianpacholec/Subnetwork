@@ -158,7 +158,7 @@ namespace Subnetwork
         private static void insertSNPPSToRC(List<SNPP> receivedList)
         {
             for (int i = 0; i < receivedList.Count; i++)
-                routingController.addSNPP(receivedList.ElementAt(i));
+                routingController.AddSNPP(receivedList.ElementAt(i));
         }    
 
     }
