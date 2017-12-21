@@ -83,19 +83,22 @@ namespace Subnetwork
         private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNP connectionBegin, SNPP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
@@ -220,16 +223,22 @@ namespace Subnetwork
                 if (link.FirstSNPP.Address == SNPstart.Address && link.SecondSNPP.Address == SNPend.Address)
                     return true;
             }
-            return false;                       
+            return false;
         }
 
         private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
             //wysyla do cc poziom niżej wiadomosc connection request
+            IPAddress subnetworkAddress;
 
+            foreach (SubnetworkAddress sub in containedSubnetworksAddresses)
+            {
+                if (IPAddressExtensions.IsInSameSubnet(sub.subnetAddress, IPAddress.Parse(pathBegin.Address), sub.subnetMask))
+                    subnetworkAddress = sub.subnetAddress;
+            }
 
-            //SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetworkAddress);
-            
+            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetworkAddress);
+
             return true;
         }
 
@@ -242,6 +251,7 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
+            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd);
             return true;
         }
 

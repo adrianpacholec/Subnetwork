@@ -59,11 +59,26 @@ namespace Subnetwork
         public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, string subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-            CSocket childSubSocket; // = SocketsByAddress[subnetworkAddress];
+            CSocket childSubSocket; 
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQEST, connTuple);
+            }
+        }
+
+        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd)
+        {
+            //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
+            //jak serwer podsieci w tej domenie i zostanie zapamiętany jego socket w słowniku.
+            //i teraz dam tak, że w słoniku po tym adresie on wyszuka ten socket, potem się to zmieni
+
+            Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
+            CSocket otherDomainSocket;
+            bool hasValue = SocketsByAddress.TryGetValue(AddressPathEnd, out otherDomainSocket);
+            if (hasValue)
+            {
+                otherDomainSocket.SendObject(CONNECTION_REQEST, peerTuple);
             }
         }
 
