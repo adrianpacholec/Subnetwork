@@ -30,6 +30,7 @@ namespace Subnetwork
             containedSubnetworksAddresses = new List<SubnetworkAddress>();
             linkList = new List<Link>();
             LoadContainedSubnetworks();
+            LoadLinkList();
         }
 
         public void LoadContainedSubnetworks()
@@ -184,14 +185,22 @@ namespace Subnetwork
 
         private bool IsOnLinkList(SNP SNPstart, SNP SNPend)
         {
-
-            //sprawdza, czy ma taka pare na liscie
-            return true;
+            //sprawdza, czy ma taka pare na liscie 
+            foreach (Link link in linkList)
+            {
+                if (link.FirstSNPP.Address == SNPstart.Address && link.SecondSNPP.Address == SNPend.Address)
+                    return true;
+            }
+            return false;                       
         }
 
         private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
             //wysyla do cc poziom niżej wiadomosc connection request
+
+
+            //SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetworkAddress);
+            
             return true;
         }
 

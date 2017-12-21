@@ -17,6 +17,7 @@ namespace Subnetwork
         public const String SNPP_SUBNETWORK_INFORMATION = "snppSubnetworkInformation";
         public const String NETWORK_TOPOLOGY = "networkTopology";
         public const String OPERATED_SUBNETWORK = "operatedSubnetwork";
+        public const String CONNECTION_REQEST = "connectionRequest";
 
 
         private static ConnectionController connectionController;
@@ -55,6 +56,17 @@ namespace Subnetwork
 
         }
 
+        public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, string subnetworkAddress)
+        {
+            Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
+            CSocket childSubSocket; // = SocketsByAddress[subnetworkAddress];
+            bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
+            if (hasValue)
+            {
+                childSubSocket.SendObject(CONNECTION_REQEST, connTuple);
+            }
+        }
+
         private static object getSubnetworkInformation()
         {
             Dictionary<string, string> mySubnetworkInformation = new Dictionary<string, string>();
@@ -90,11 +102,11 @@ namespace Subnetwork
         {
             while (true)
             {
-                CSocket connected=listeningSocket.Accept();
+                CSocket connected = listeningSocket.Accept();
                 Console.WriteLine("connected");
                 waitForInputFromSocketInAnotherThread(connected);
             }
-       
+
         }
 
         private static void waitForInputFromSocketInAnotherThread(CSocket connected)
@@ -117,7 +129,7 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(CONNECTION_REQUEST_FROM_NCC))
                 {
-                    MessageParameters parameters= (MessageParameters)receivedObject;
+                    MessageParameters parameters = (MessageParameters)receivedObject;
                     String sourceIP = parameters.getFirstParameter();
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
@@ -140,7 +152,7 @@ namespace Subnetwork
 
         private static void ProcessConnectInformations(CSocket connectedSocket)
         {
-            Tuple<string, object>received = connectedSocket.ReceiveObject();
+            Tuple<string, object> received = connectedSocket.ReceiveObject();
             Dictionary<string, string> receivedInformation = (Dictionary<string, string>)received.Item2;
             if (receivedInformation.Count == 0)
             {
@@ -158,8 +170,8 @@ namespace Subnetwork
         private static void insertSNPPSToRC(List<SNPP> receivedList)
         {
             for (int i = 0; i < receivedList.Count; i++)
-                routingController.addSNPP(receivedList.ElementAt(i));
-        }    
+                routingController.AddSNPP(receivedList.ElementAt(i));
+        }
 
     }
 }
