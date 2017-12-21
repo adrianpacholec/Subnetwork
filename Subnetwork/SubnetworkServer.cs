@@ -59,11 +59,26 @@ namespace Subnetwork
         public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, string subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-            CSocket childSubSocket; // = SocketsByAddress[subnetworkAddress];
+            CSocket childSubSocket; 
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQEST, connTuple);
+            }
+        }
+
+        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd)
+        {
+            //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
+            //jak serwer podsieci w tej domenie i zostanie zapamiętany jego socket w słowniku.
+            //i teraz dam tak, że w słoniku po tym adresie on wyszuka ten socket, potem się to zmieni
+
+            Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
+            CSocket otherDomainSocket;
+            bool hasValue = SocketsByAddress.TryGetValue(AddressPathEnd, out otherDomainSocket);
+            if (hasValue)
+            {
+                otherDomainSocket.SendObject(CONNECTION_REQEST, peerTuple);
             }
         }
 
@@ -91,7 +106,7 @@ namespace Subnetwork
 
         private static Thread initListenThread()
         {
-            Console.WriteLine("Listening for subnetwork connections");
+            LogClass.Log("Listening for subnetwork connections");
             var t = new Thread(() => RealStart());
             t.IsBackground = true;
             t.Start();
@@ -103,7 +118,7 @@ namespace Subnetwork
             while (true)
             {
                 CSocket connected = listeningSocket.Accept();
-                Console.WriteLine("connected");
+                LogClass.Log("Connected.");                
                 waitForInputFromSocketInAnotherThread(connected);
             }
 
@@ -133,15 +148,15 @@ namespace Subnetwork
                     String sourceIP = parameters.getFirstParameter();
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
-                    Console.WriteLine("Received from NCC");
-                    //connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
+                    LogClass.Log("Received CONNECTION REQUEST from NCC.");                    
+                    connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
                     Tuple<SNP, SNPP> receivedPair = (Tuple<SNP, SNPP>)receivedObject;
                     connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
-                    Console.WriteLine("Received fro");
+                    LogClass.Log("Received PEER COORDINATION from AS_1");
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
@@ -163,7 +178,7 @@ namespace Subnetwork
             {
                 String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
                 SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
-                Console.WriteLine("Subnetwork " + operatedSubnetwork + " connected");
+                LogClass.Log("Subnetwork " + operatedSubnetwork + " connected");
             }
         }
 
