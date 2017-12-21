@@ -105,7 +105,7 @@ namespace Subnetwork
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
         // % % % % % % % % % % % % % % % % % % % % % % % % % //
 
-        private bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
+        public bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
             string PathEndAddressFromDifferentDomain = null;
 
@@ -137,11 +137,11 @@ namespace Subnetwork
                 {
                     if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                     {
-                        Console.WriteLine("Subnetwork Connection set properly");
+                        LogClass.Log("Subnetwork Connection set properly.");                        
                     }
                     else
                     {
-                        Console.WriteLine("Epic fail");
+                        LogClass.Log("Epic fail.");                        
                         return false;
                     }
                 }
@@ -152,18 +152,18 @@ namespace Subnetwork
                 SNP lastSNPinThisDomain = SNPList.Last();
                 if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
-                    Console.WriteLine("PeerCoordination OK");
+                    LogClass.Log("PeerCoordination OK.");                    
                 }
                 else
                 {
-                    Console.WriteLine("PeerCoordination FAIL");
+                    LogClass.Log("PeerCoordination FAIL.");                    
                 };
             }
 
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        private bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
+        public bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
         {
             List<SNPP> SNPPList = RouteTableQuery(SNPpathBegin.Address, SNPpathEnd.Address, SNPpathBegin.OccupiedCapacity);
             List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
@@ -202,11 +202,11 @@ namespace Subnetwork
                 {
                     if (ConnectionRequestOut(pathBegin, pathEnd))
                     {
-                        Console.WriteLine("Subnetwork Connection set properly");
+                        LogClass.Log("Subnetwork Connection set properly");
                     }
                     else
                     {
-                        Console.WriteLine("Epic fail");
+                        LogClass.Log("Epic fail.");
                         return false;
                     }
                 }
