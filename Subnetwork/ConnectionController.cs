@@ -13,15 +13,22 @@ namespace Subnetwork
         public const char PARAM_SEPARATOR = ' ';
         public const int ADDRESS_POSITION = 0;
         public const int MASK_POSITION = 1;
+        public const int FIRST_ADDRESS_POS = 0;
+        public const int FIRST_CAPACITY_POS = 1;
+        public const int SECOND_ADDRESS_POS = 2;
+        public const int SECOND_CAPACITY_POS = 3;
 
         private List<CSocket> sockets;
         private string NetworkAddress, ParentNetworkAddress;
         private List<SubnetworkAddress> containedSubnetworksAddresses;
+        private List<Link> linkList;
+
         public ConnectionController()
         {
             NetworkAddress = Config.getProperty("NetworkAddress");
             ParentNetworkAddress = Config.getProperty("ParentNetworkAddress");
             containedSubnetworksAddresses = new List<SubnetworkAddress>();
+            linkList = new List<Link>();
             LoadContainedSubnetworks();
         }
 
@@ -34,6 +41,20 @@ namespace Subnetwork
             {
                 subnetworkParams = str.Split(PARAM_SEPARATOR);
                 containedSubnetworksAddresses.Add(new SubnetworkAddress(subnetworkParams[ADDRESS_POSITION], subnetworkParams[MASK_POSITION]));
+                Console.WriteLine(str);
+            }
+        }
+
+        public void LoadLinkList()
+        {
+            string fileName = Config.getProperty("linkList");
+            string[] loadedFile = loadFile(fileName);
+            string[] linkParams = null;
+            foreach (string str in loadedFile)
+            {
+                linkParams = str.Split(PARAM_SEPARATOR);
+                linkList.Add(new Link(new SNPP(linkParams[FIRST_ADDRESS_POS], Int32.Parse(linkParams[FIRST_CAPACITY_POS])),
+                                      new SNPP(linkParams[SECOND_ADDRESS_POS], Int32.Parse(linkParams[SECOND_CAPACITY_POS]))));
                 Console.WriteLine(str);
             }
         }
