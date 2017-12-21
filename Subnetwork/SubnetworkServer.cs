@@ -188,6 +188,9 @@ namespace Subnetwork
                 routingController.AddSNPP(receivedList.ElementAt(i));
         }    
 
-
+            public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
+        {
+            // Maciek zrób tu co chcesz xD
+        }
     }
 }

@@ -36,10 +36,12 @@ namespace Subnetwork
                 if (delete)
                 {
                     existingSNPs.Remove(localTopologyUpdate);
+                    Console.WriteLine("Remove " + localTopologyUpdate + " from local topology");
                 }
                 else
                 {
                     existingSNPs.Add(localTopologyUpdate);
+                    Console.WriteLine("Add " + localTopologyUpdate + " to local topology");
                 }
 
             }
