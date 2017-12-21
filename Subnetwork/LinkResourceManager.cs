@@ -12,56 +12,82 @@ namespace Subnetwork
         public const int ADDRESS_POSITION = 0;
         public const int CAPACITY_POSITION = 1;
         private List<SNPP> myEdgeSNPPs;
-        private List<String> containedSubnetworksAddresses;
-        private Dictionary<SNPP, List<SNP>> SNPsbySNPP;
+
+        private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
         private int rememberedLabel;
+
+        public const int MASK_POSITION = 1;
+        public const int LINK_NODE_A_POSITION = 0;
+        public const int LINK_NODE_A_CAPACITY_POSITION = 1;
+        public const int LINK_NODE_B_POSITION = 2;
+        public const int LINK_NODE_B_CAPACITY_POSITION = 3;
+        private List<Link> links;
+
 
         public LinkResourceManager()
         {
             myEdgeSNPPs = new List<SNPP>();
-            containedSubnetworksAddresses = new List<string>();
-            loadEdgeSNPPsFromFile();
-            LoadContainedSubnetworks();
+            LoadEdgeSNPPsFromFile();
             rememberedLabel = GimmeNewLabel();
+            links = new List<Link>();
+            LoadLinks();
 
         }
 
-        private void loadEdgeSNPPsFromFile()
+        private void LoadEdgeSNPPsFromFile()
         {
             string fileName = Config.getProperty("EdgeSNPPsFileName");
-            string[] loadedFile = loadFile(fileName);
+            string[] loadedFile = LoadFile(fileName);
             string[] snppParams = null;
             foreach (string str in loadedFile)
             {
                 snppParams = str.Split(PARAM_SEPARATOR);
-                addEdgeSNPP(snppParams);
+                AddEdgeSNPP(snppParams);
             }
         }
 
-        private string[] loadFile(String fileName)
+
+        private string[] LoadFile(String fileName)
         {
             string[] fileLines = System.IO.File.ReadAllLines(fileName);
             return fileLines;
         }
 
-        private void addEdgeSNPP(string[] snppParams)
+        private void AddEdgeSNPP(string[] snppParams)
         {
             String snppAddress = snppParams[ADDRESS_POSITION];
             int snppCapacity = Int32.Parse(snppParams[CAPACITY_POSITION]);
             SNPP edgeSNPP = new Subnetwork.SNPP(snppAddress, snppCapacity);
-            SNPsbySNPP.Add(edgeSNPP, new List<SNP>());
+            SNPsbySNPPaddress.Add(edgeSNPP.Address, new List<SNP>());
             myEdgeSNPPs.Add(edgeSNPP);
             Console.WriteLine(edgeSNPP.ToString());
         }
 
-        public void LoadContainedSubnetworks()
+
+        public void LoadLinks()
         {
-            string fileName = Config.getProperty("ContainedSubnetworks");
-            string[] loadedFile = loadFile(fileName);
+            string fileName = Config.getProperty("subnetworkLinks");
+            string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
+            string firstNodeAddress = null;
+            int firstNodeCapacity;
+            string secondNodeAddress = null;
+            int secondNodeCapacity;
+            SNPP firstSNPP = null;
+            SNPP secondSNPP = null;
+
             foreach (string str in loadedFile)
             {
-                containedSubnetworksAddresses.Add(str);
+                subnetworkParams = str.Split(PARAM_SEPARATOR);
+                firstNodeAddress = subnetworkParams[LINK_NODE_A_POSITION];
+                firstNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_A_CAPACITY_POSITION]);
+                secondNodeAddress = subnetworkParams[LINK_NODE_B_POSITION];
+                secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
+                firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
+                secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
+                links.Add(new Link(firstSNPP, secondSNPP));
+                myEdgeSNPPs.Add(firstSNPP);
+                myEdgeSNPPs.Add(secondSNPP);
                 Console.WriteLine(str);
             }
         }
@@ -71,11 +97,12 @@ namespace Subnetwork
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
         // % % % % % % % % % % % % % % % % % % % % % % % % % //
 
+
         private Tuple<SNP, SNP> SNPLinkConnectionRequest(Object pathBegin, Object pathEnd, int capacity)
         {
-            Tuple<SNP, SNP> SNPpair;
+            Tuple<SNP, SNP> SNPpair = null;
             //LRM dostaje od CC dwa SNPP do stworzenia SNP
-            if (pathBegin.GetType == instanceOf(SNPP) && pathEnd.GetType == instanceOf(SNPP))
+            if (pathBegin.GetType() == typeof(SNPP) && pathEnd.GetType() == typeof(SNPP))
             {
 
                 SNPP SNPPpathBegin = (SNPP)pathBegin;
@@ -86,7 +113,7 @@ namespace Subnetwork
             }
 
             //LRM dostaje od CC SNP i SNPP, uzywa otrzymane SNP i tworzy nowe SNP dla SNPP
-            else if (pathBegin.GetType == instanceOf(SNP) && pathEnd.GetType == instanceOf(SNPP))
+            else if (pathBegin.GetType() == typeof(SNP) && pathEnd.GetType() == typeof(SNPP))
             {
                 SNP SNPpathBegin = (SNP)pathBegin;
                 SNPP SNPPpathEnd = (SNPP)pathEnd;
@@ -95,140 +122,88 @@ namespace Subnetwork
 
             }
             //LRM dostaje od CC SNPP i SNP, uzywa otrzymane SNP i tworzy nowe SNP dla SNPP
-            else if (pathBegin.GetType == instanceOf(SNPP) && pathEnd.GetType == instanceOf(SNPP))
+            else if (pathBegin.GetType() == typeof(SNPP) && pathEnd.GetType() == typeof(SNPP))
             {
                 SNPP SNPPpathBegin = (SNPP)pathBegin;
                 SNP SNPpathEnd = (SNP)pathEnd;
 
                 SNPpair = SNPPandSNP(SNPPpathBegin, SNPpathEnd, capacity);
-
             }
-
             return SNPpair;
-
         }
-
-
-
-
+ 
         private Tuple<SNP, SNP> SNPPandSNPP(SNPP pathBegin, SNPP pathEnd, int capacity)
         {
             List<SNP> existingSNPs = new List<SNP>();
             Tuple<SNP, SNP> SNPpair;
-            SNP SNPpathBegin;
-            SNP SNPpathEnd;
+            SNP SNPpathBegin, SNPpathEnd;
 
-            //petla po wszystkich elementach slownika                                                                                                     
-            foreach (SNPP snpp in SNPsbySNPP)
-            {
-                //jezeli znajdzie wpis o adresie poczatkowego to
-                if (snpp.Address == SNPPpathBegin.Address)
-                {
-                    //tworzy SNP poczatkowe i dodaje do listy w slowniku
-                    SNPpathBegin = SNP(rememberedLabel, SNPPpathBegin.Address, capacity); //uses remembered label
-                    SNPpair.Item1 = SNPpathBegin;
-                    SNPsbySNPP[snpp.Address].Add(SNPpathBegin);
-                }
-                //jezeli znajdzie wpis o adresie koncowego to
-                else if (snpp.Address == SNPPpathEnd.Address)
-                {
-                    //pobiera liste SNP tego SNPP
-                    existingSNPs = SNPsbySNPP[snpp.Address];
-                    //generuje nowy label
-                    int potentiallyNewLabel = GimmeNewLabel();
-                    //sprawdza, czy wygenerowany label juz nie wystapil 
-                    while (true)
-                    {
-                        foreach (SNP snp in existingSNPs)
-                        {
-                            if (snp.Label == potentiallyNewLabel)
-                            {
-                                //jezeli wystapil, to generuje nowy i sprawdza jeszcze raz
-                                potentiallyNewLabel = GimmeNewLabel();
-                                continue;
-                            }
-                            //jezeli nie wystapil to tworzy SNP koncowe i dodaje je do listy w slowniku
-                            SNPpathEnd = SNP(potentiallyNewLabel, SNPPpathEnd.Address, capacity); //uses generated label
-                            SNPpair.Item2 = SNPpathEnd;
-                            SNPsbySNPP[snpp.Address].Add(SNPpathBegin);
-                            continue;
-                        }
-                    }
-                }
-            }
+            //sprawdz, czy label z kieszonki nie wystapil w SNPs - jesli tak, wygeneruj inny label
+            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];
+            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();            
+            //tworzenie SNP poczatkowego SNPP
+            SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
+            SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+
+            //generuje nowy label
+            int potentiallyNewLabel = GimmeNewLabel();
+            //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
+            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
+            while (existingSNPs.Find(x => x.Label == potentiallyNewLabel) != null) potentiallyNewLabel = GimmeNewLabel();
+            //pobiera liste SNP koncowego SNPP
+            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
+            //tworzenie SNP koncowego SNPP
+            SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
+            SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
+
+            SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);
+            return SNPpair;
         }
 
-        private Tuple<SNP, SNP> SNPandSNPP(SNP SNPpathBegin, SNPP pathEnd, int capacity)
+        private Tuple<SNP, SNP> SNPandSNPP(SNP pathBegin, SNPP pathEnd, int capacity)
         {
             List<SNP> existingSNPs = new List<SNP>();
             Tuple<SNP, SNP> SNPpair;
             SNP SNPpathEnd;
 
-            //petla po wszystkich elementach slownika                                                                                                     
-            foreach (SNPP snpp in SNPsbySNPP)
-            {
-                //jezeli znajdzie wpis o adresie poczatkowego to
-                if (snpp.Address == SNPPpathBegin.Address)
-                {
-                    SNPpair.Item1 = SNPpathBegin;
-                    //dodaje otrzymane SNP do listy w slowniku
-                    SNPsbySNPP[snpp.Address].Add(SNPpathBegin);
-                }
-                //jezeli znajdzie wpis o adresie koncowego to
-                else if (snpp.Address == SNPPpathEnd.Address)
-                {
-                    //pobiera liste SNP tego SNPP
-                    existingSNPs = SNPsbySNPP[snpp.Address];
-                    //generuje nowy label
-                    int potentiallyNewLabel = GimmeNewLabel();
-                    //sprawdza, czy wygenerowany label juz nie wystapil 
-                    while (true)
-                    {
-                        foreach (SNP snp in existingSNPs)
-                        {
-                            if (snp.Label == potentiallyNewLabel)
-                            {
-                                //jezeli wystapil, to generuje nowy i sprawdza jeszcze raz
-                                potentiallyNewLabel = GimmeNewLabel();
-                                continue;
-                            }
-                            //jezeli nie wystapil to tworzy SNP koncowe i dodaje je do listy w slowniku
-                            SNPpathEnd = SNP(potentiallyNewLabel, SNPPpathEnd.Address, capacity); //uses generated label
-                            SNPpair.Item2 = SNPpathEnd;
-                            SNPsbySNPP[snpp.Address].Add(SNPpathBegin);
-                            continue;
-                        }
-                    }
-                }
-            }
+            //dodaje otrzymane SNP do odpowiadajacego mu SNPP
+            SNPsbySNPPaddress[pathBegin.Address].Add(pathBegin);
+
+            //generuje nowy label
+            int potentiallyNewLabel = GimmeNewLabel();
+            //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
+            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
+            while (existingSNPs.Find(x => x.Label == potentiallyNewLabel) != null) potentiallyNewLabel = GimmeNewLabel();
+            //pobiera liste SNP koncowego SNPP
+            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
+            //tworzenie SNP koncowego SNPP
+            SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
+            SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
+
+            SNPpair = new Tuple<SNP, SNP>(pathBegin, SNPpathEnd);
+            return SNPpair;
         }
 
-        private Tuple<SNP, SNP> SNPPandSNP(SNPP pathBegin, SNP SNPpathEnd, int capacity)
+        private Tuple<SNP, SNP> SNPPandSNP(SNPP pathBegin, SNP pathEnd, int capacity)
         {
             List<SNP> existingSNPs = new List<SNP>();
             Tuple<SNP, SNP> SNPpair;
             SNP SNPpathBegin;
 
-            //petla po wszystkich elementach slownika                                                                                                     
-            foreach (SNPP snpp in SNPsbySNPP)
-            {
-                //jezeli znajdzie wpis o adresie poczatkowego to
-                if (snpp.Address == SNPPpathBegin.Address)
-                {
-                    //tworzy SNP poczatkowe i dodaje do listy w slowniku
-                    SNPpathBegin = SNP(rememberedLabel, SNPPpathBegin.Address, capacity); //uses remembered label
-                    SNPpair.Item1 = SNPpathBegin;
-                    SNPsbySNPP[snpp.Address].Add(SNPpathBegin);
-                }
-                //jezeli znajdzie wpis o adresie koncowego to
-                else if (snpp.Address == SNPPpathEnd.Address)
-                {
-                    SNPpair.Item2 = SNPpathEnd;
-                    //dodaje otrzymane SNP do listy w slowniku
-                    SNPsbySNPP[snpp.Address].Add(SNPpathEnd);
-                }
-            }
+            //sprawdz, czy label z kieszonki nie wystapil w SNPs - jesli tak, wygeneruj inny label
+            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];
+            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
+            //tworzenie SNP poczatkowego SNPP
+            SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
+            SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+
+            //dodaje otrzymane SNP do odpowiadajacego mu SNPP
+            SNPsbySNPPaddress[pathEnd.Address].Add(pathEnd);
+
+            SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, pathEnd);
+            return SNPpair;
         }
+
 
         private int GimmeNewLabel()
         {
@@ -241,9 +216,10 @@ namespace Subnetwork
             return true;
         }
 
-        private void Topology(SNPP localTopologyUpdate)
+        private void Topology(SNP localTopologyUpdate)
         {
-            //wysyła SNPP, które zostało uaktualnione do RC
+            //wysyła SNP, które zostało uaktualnione do RC
+
         }
 
 

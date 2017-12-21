@@ -12,7 +12,7 @@ namespace Subnetwork
 {
     class SubnetworkServer
     {
-        public const String CONNECTION_REQUEST = "connectionRequest";
+        public const String CONNECTION_REQUEST_FROM_NCC = "connectionRequestFromNCC";
         public const String PEER_COORDINATION = "peerCoordination";
         public const String SNPP_SUBNETWORK_INFORMATION = "snppSubnetworkInformation";
         public const String NETWORK_TOPOLOGY = "networkTopology";
@@ -24,6 +24,7 @@ namespace Subnetwork
         private static LinkResourceManager linkResourceManager;
         private static CSocket listeningSocket;
         private static CSocket toParentSocket;
+        private static CSocket toNCCSocket;
         private static Dictionary<String, CSocket> SocketsByAddress;
 
         public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
@@ -104,7 +105,7 @@ namespace Subnetwork
 
         private static void waitForInput(CSocket connected)
         {
-            ProcessSubnetworkInformations(connected);
+            ProcessConnectInformations(connected);
             while (true)
             {
                 Tuple<String, Object> received = connected.ReceiveObject();
@@ -114,13 +115,21 @@ namespace Subnetwork
                 {
                     insertSNPPSToRC((List<SNPP>)receivedObject);
                 }
-                else if (parameter.Equals(CONNECTION_REQUEST))
+                else if (parameter.Equals(CONNECTION_REQUEST_FROM_NCC))
                 {
+                    MessageParameters parameters= (MessageParameters)receivedObject;
+                    String sourceIP = parameters.getFirstParameter();
+                    String destinationIP = parameters.getSecondParameter();
+                    int capacity = parameters.getCapacity();
+                    Console.WriteLine("Received from NCC");
+                    //connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
-
+                    Tuple<SNP, SNPP> receivedPair = (Tuple<SNP, SNPP>)receivedObject;
+                    connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                    Console.WriteLine("Received fro");
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
@@ -129,13 +138,21 @@ namespace Subnetwork
             }
         }
 
-        private static void ProcessSubnetworkInformations(CSocket connectedSocket)
+        private static void ProcessConnectInformations(CSocket connectedSocket)
         {
             Tuple<string, object>received = connectedSocket.ReceiveObject();
             Dictionary<string, string> receivedInformation = (Dictionary<string, string>)received.Item2;
-            String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
-            SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
-            Console.WriteLine("Subnetwork " + operatedSubnetwork + " connected");
+            if (receivedInformation.Count == 0)
+            {
+                toNCCSocket = connectedSocket;
+
+            }
+            else
+            {
+                String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
+                SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
+                Console.WriteLine("Subnetwork " + operatedSubnetwork + " connected");
+            }
         }
 
         private static void insertSNPPSToRC(List<SNPP> receivedList)
