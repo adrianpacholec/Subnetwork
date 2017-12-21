@@ -171,7 +171,11 @@ namespace Subnetwork
         {
             for (int i = 0; i < receivedList.Count; i++)
                 routingController.AddSNPP(receivedList.ElementAt(i));
+<<<<<<< HEAD
         }
+=======
+        }    
+>>>>>>> 1292cefa462905dd9aea319a65a43df9cbac803c
 
     }
 }

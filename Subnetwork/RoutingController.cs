@@ -9,6 +9,8 @@ namespace Subnetwork
     class RoutingController
     {
         private List<SNPP> SNPPList;
+        private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
+        private Dictionary<string, List<Tuple<string, string>>> domainAddress;
 
         public RoutingController()
         {
@@ -18,18 +20,32 @@ namespace Subnetwork
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
             //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
-            //2. Robi jakiegoś Djikstre
+            //2. Robi jakiegoś Djikstre, u nas Floyda bo Komando pozwolił
             //3. Zwraca wyznaczoną ścieżkę
             return new List<SNPP>();
         }
 
-        private void LocalTopologyIn(SNPP localTopologyUpdate)
+        private void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
-            //updatuje sobie SNPP w swojej liscie
+            
+            List<SNP> existingSNPs = SNPsbySNPPaddress[localTopologyUpdate.Address];
+            //sprawdz czy istnieje taki SNP
+            while (existingSNPs.Find(x => x.Label == localTopologyUpdate.Label) != null)
+            {
+                // jeśli TRUE to usuwamy z List<SNP>, jeśli FALSE to dodajemy
+                if (delete)
+                {
+                    existingSNPs.Remove(localTopologyUpdate);
+                }
+                else
+                {
+                    existingSNPs.Add(localTopologyUpdate);
+                }
 
-
+            }
         }
 
+        
         private void NetworkTopologyIn(SNPP localTopologyUpdate)
         {
 

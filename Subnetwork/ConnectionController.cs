@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CustomSocket;
-
+using System.Net;
 
 namespace Subnetwork
 {
@@ -19,7 +19,8 @@ namespace Subnetwork
         public const int SECOND_CAPACITY_POS = 3;
 
         private List<CSocket> sockets;
-        private string NetworkAddress, ParentNetworkAddress;
+        private string NetworkAddress, ParentNetworkAddress; //prawdziwe adresy IP
+        private string SubnetworkAddress, SubnetworkMask;    //adres tego subnetworka
         private List<SubnetworkAddress> containedSubnetworksAddresses;
         private List<Link> linkList;
 
@@ -27,6 +28,10 @@ namespace Subnetwork
         {
             NetworkAddress = Config.getProperty("NetworkAddress");
             ParentNetworkAddress = Config.getProperty("ParentNetworkAddress");
+
+            SubnetworkAddress = Config.getProperty("SubnetworkAddress");
+            SubnetworkMask = Config.getProperty("SubnetworkMask");
+
             containedSubnetworksAddresses = new List<SubnetworkAddress>();
             linkList = new List<Link>();
             LoadContainedSubnetworks();
@@ -68,8 +73,11 @@ namespace Subnetwork
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
+            List<SNPP> SNPPlist = new List<SNPP>();
             //wysyla do RC żądanie listy SNPP, a on odsyła bo jest grzeczny
-            return new List<SNPP>();
+            //TODO dodac wywolanie metody serwera, zeby wyslal RouteTableQuery
+
+            return SNPPlist;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
@@ -96,11 +104,19 @@ namespace Subnetwork
 
         private bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
+            string PathEndAddressFromDifferentDomain = null;
+
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
+
+            //sprawdza, czy adres koncowy jest w tej samej domenie
+            if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(SubnetworkAddress), IPAddress.Parse(SubnetworkMask)))
+            {
+                PathEndAddressFromDifferentDomain = pathEnd;
+            }
+
             List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
 
-
-            for (int index = 0; index < SNPPList.Count; index +=2)
+            for (int index = 0; index < SNPPList.Count; index += 2)
             {
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
@@ -126,8 +142,21 @@ namespace Subnetwork
                         return false;
                     }
                 }
-
             }
+
+            if (PathEndAddressFromDifferentDomain != null)
+            {
+                SNP lastSNPinThisDomain = SNPList.Last();
+                if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                {
+                    Console.WriteLine("PeerCoordination OK");
+                }
+                else
+                {
+                    Console.WriteLine("PeerCoordination FAIL");
+                };
+            }
+
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
@@ -204,12 +233,14 @@ namespace Subnetwork
             return true;
         }
 
-        public bool PeerCoordinationIn(SNP SNPPpathBegin, SNPP SNPpathEnd)
+        public bool PeerCoordinationIn(SNP SNPPpathBegin, string pathEnd)
         {
+
+
             return true;
         }
 
-        private bool PeerCoordinationOut()
+        private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
             return true;
         }
