@@ -106,7 +106,7 @@ namespace Subnetwork
 
         private static Thread initListenThread()
         {
-            Console.WriteLine("Listening for subnetwork connections");
+            LogClass.Log("Listening for subnetwork connections");
             var t = new Thread(() => RealStart());
             t.IsBackground = true;
             t.Start();
@@ -118,7 +118,7 @@ namespace Subnetwork
             while (true)
             {
                 CSocket connected = listeningSocket.Accept();
-                Console.WriteLine("connected");
+                LogClass.Log("Connected.");                
                 waitForInputFromSocketInAnotherThread(connected);
             }
 
@@ -148,15 +148,15 @@ namespace Subnetwork
                     String sourceIP = parameters.getFirstParameter();
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
-                    Console.WriteLine("Received from NCC");
-                    //connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
+                    LogClass.Log("Received CONNECTION REQUEST from NCC.");                    
+                    connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
                     Tuple<SNP, SNPP> receivedPair = (Tuple<SNP, SNPP>)receivedObject;
                     connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
-                    Console.WriteLine("Received fro");
+                    LogClass.Log("Received PEER COORDINATION from AS_1");
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
@@ -178,7 +178,7 @@ namespace Subnetwork
             {
                 String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
                 SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
-                Console.WriteLine("Subnetwork " + operatedSubnetwork + " connected");
+                LogClass.Log("Subnetwork " + operatedSubnetwork + " connected");
             }
         }
 
