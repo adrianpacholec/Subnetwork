@@ -48,16 +48,21 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="ConnectionController.cs" />
+    <Compile Include="Edge.cs" />
     <Compile Include="IPAddressExtensions.cs" />
     <Compile Include="Link.cs" />
     <Compile Include="LinkResourceManager.cs" />
+    <Compile Include="Network.cs" />
+    <Compile Include="Path.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Router.cs" />
     <Compile Include="RoutingController.cs" />
     <Compile Include="SNP.cs" />
     <Compile Include="SNPP.cs" />
     <Compile Include="SubnetworkAddress.cs" />
     <Compile Include="SubnetworkServer.cs" />
+    <Compile Include="Vertex.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -65,7 +70,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\customSocket\CustomSocket.csproj">
+    <ProjectReference Include="..\..\..\..\..\Documents\Visual Studio 2015\Projects\CustomSocket\CustomSocket\CustomSocket.csproj">
       <Project>{a0c09126-9dd3-4857-8c90-ec2b090beb11}</Project>
       <Name>CustomSocket</Name>
     </ProjectReference>

@@ -182,7 +182,6 @@ namespace Subnetwork
                 else if (index == SNPPList.Count - 2)
                 {
                     SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPpathEnd);
-
                 }
                 else
                 {
@@ -242,11 +241,49 @@ namespace Subnetwork
             return true;
         }
 
-        public bool PeerCoordinationIn(SNP SNPPpathBegin, string pathEnd)
+        public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)
         {
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
+            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
 
+            for (int index = 0; index < SNPPList.Count; index += 2)
+            {
+                
+                SNPP SNPPpathBegin = SNPPList[index];
+                SNPP SNPPpathEnd = SNPPList[index + 1];
+                Tuple<SNP, SNP> SNPpair = null;
+                if (index == 0)
+                {
+                    SNPpair = LinkConnectionRequest(pathBegin, SNPPpathEnd);
+                } else
+                {
+                  SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+                 
+                SNPList.Add(SNPpair.Item1);
+                SNPList.Add(SNPpair.Item2);
+            }
 
-            return true;
+            for (int index = 0; index < SNPList.Count; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+
+                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                {
+                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    {
+                        Console.WriteLine("Subnetwork Connection set properly");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Epic fail");
+                        return false;
+                    }
+                }
+            }
+
+            return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
