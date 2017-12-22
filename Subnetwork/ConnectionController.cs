@@ -137,11 +137,11 @@ namespace Subnetwork
                 {
                     if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                     {
-                        LogClass.Log("Subnetwork Connection set properly.");                        
+                        LogClass.Log("Subnetwork Connection set properly.");
                     }
                     else
                     {
-                        LogClass.Log("Epic fail.");                        
+                        LogClass.Log("Epic fail.");
                         return false;
                     }
                 }
@@ -152,11 +152,11 @@ namespace Subnetwork
                 SNP lastSNPinThisDomain = SNPList.Last();
                 if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
-                    LogClass.Log("PeerCoordination OK.");                    
+                    LogClass.Log("PeerCoordination OK.");
                 }
                 else
                 {
-                    LogClass.Log("PeerCoordination FAIL.");                    
+                    LogClass.Log("PeerCoordination FAIL.");
                 };
             }
 
@@ -248,18 +248,19 @@ namespace Subnetwork
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
-                
+
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
                 Tuple<SNP, SNP> SNPpair = null;
                 if (index == 0)
                 {
                     SNPpair = LinkConnectionRequest(pathBegin, SNPPpathEnd);
-                } else
-                {
-                  SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
                 }
-                 
+                else
+                {
+                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
@@ -273,11 +274,11 @@ namespace Subnetwork
                 {
                     if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                     {
-                        Console.WriteLine("Subnetwork Connection set properly");
+                        LogClass.Log("Subnetwork Connection set properly");
                     }
                     else
                     {
-                        Console.WriteLine("Epic fail");
+                        LogClass.Log("Epic fail");
                         return false;
                     }
                 }
