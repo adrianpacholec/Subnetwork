@@ -145,7 +145,6 @@ namespace Subnetwork
             if (receivedInformation.Count == 0)
             {
                 toNCCSocket = connectedSocket;
-
             }
             else
             {

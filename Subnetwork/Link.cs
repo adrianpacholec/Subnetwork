@@ -8,8 +8,8 @@ namespace Subnetwork
 {
     class Link
     {
-        private SNPP FirstSNPP { get; set; }
-        private SNPP SecondSNPP { get; set; }
+        public SNPP FirstSNPP { get; set; }
+        public SNPP SecondSNPP { get; set; }
 
         public Link(SNPP first, SNPP second)
         {
