@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using CustomSocket;
 
 namespace Subnetwork
 {
@@ -59,10 +60,12 @@ namespace Subnetwork
                 if (delete)
                 {
                     existingSNPs.Remove(localTopologyUpdate);
+                    LogClass.Log("Remove " + localTopologyUpdate + " from local topology");
                 }
                 else
                 {
                     existingSNPs.Add(localTopologyUpdate);
+                    LogClass.Log("Add " + localTopologyUpdate + " to local topology");
                 }
 
             }
