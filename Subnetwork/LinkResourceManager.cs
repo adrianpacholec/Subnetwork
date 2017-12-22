@@ -27,13 +27,13 @@ namespace Subnetwork
         public LinkResourceManager()
         {
             myEdgeSNPPs = new List<SNPP>();
-            LoadEdgeSNPPsFromFile();
             rememberedLabel = GimmeNewLabel();
             links = new List<Link>();
             LoadLinks();
 
         }
 
+        /*
         private void LoadEdgeSNPPsFromFile()
         {
             string fileName = Config.getProperty("EdgeSNPPsFileName");
@@ -45,7 +45,7 @@ namespace Subnetwork
                 AddEdgeSNPP(snppParams);
             }
         }
-
+        */
 
         private string[] LoadFile(String fileName)
         {

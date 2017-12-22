@@ -35,7 +35,6 @@ namespace Subnetwork
             containedSubnetworksAddresses = new List<SubnetworkAddress>();
             linkList = new List<Link>();
             LoadContainedSubnetworks();
-            LoadLinkList();
         }
 
         public void LoadContainedSubnetworks()
@@ -50,7 +49,7 @@ namespace Subnetwork
                 Console.WriteLine(str);
             }
         }
-
+        /*
         public void LoadLinkList()
         {
             string fileName = Config.getProperty("linkList");
@@ -64,7 +63,7 @@ namespace Subnetwork
                 Console.WriteLine(str);
             }
         }
-
+        */
         private string[] loadFile(String fileName)
         {
             string[] fileLines = System.IO.File.ReadAllLines(fileName);
@@ -228,16 +227,19 @@ namespace Subnetwork
         private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
             //wysyla do cc poziom niżej wiadomosc connection request
-            IPAddress subnetworkAddress;
+            IPAddress subnetworkAddress = null;
+            IPAddress subnetworkAddressMask = null;
 
             foreach (SubnetworkAddress sub in containedSubnetworksAddresses)
             {
                 if (IPAddressExtensions.IsInSameSubnet(sub.subnetAddress, IPAddress.Parse(pathBegin.Address), sub.subnetMask))
+                {
                     subnetworkAddress = sub.subnetAddress;
+                    subnetworkAddressMask = sub.subnetMask;
+                }
             }
-
-            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetworkAddress);
-
+            SubnetworkAddress subnetAddress = new SubnetworkAddress(subnetworkAddress.ToString(), subnetworkAddressMask.ToString());
+            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetAddress);
             return true;
         }
 
