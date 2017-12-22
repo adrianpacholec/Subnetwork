@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CustomSocket;
-
+using System.Net;
 
 namespace Subnetwork
 {
@@ -19,7 +19,8 @@ namespace Subnetwork
         public const int SECOND_CAPACITY_POS = 3;
 
         private List<CSocket> sockets;
-        private string NetworkAddress, ParentNetworkAddress;
+        private string NetworkAddress, ParentNetworkAddress; //prawdziwe adresy IP
+        private string SubnetworkAddress, SubnetworkMask;    //adres tego subnetworka
         private List<SubnetworkAddress> containedSubnetworksAddresses;
         private List<Link> linkList;
 
@@ -27,9 +28,14 @@ namespace Subnetwork
         {
             NetworkAddress = Config.getProperty("NetworkAddress");
             ParentNetworkAddress = Config.getProperty("ParentNetworkAddress");
+
+            SubnetworkAddress = Config.getProperty("SubnetworkAddress");
+            SubnetworkMask = Config.getProperty("SubnetworkMask");
+
             containedSubnetworksAddresses = new List<SubnetworkAddress>();
             linkList = new List<Link>();
             LoadContainedSubnetworks();
+            LoadLinkList();
         }
 
         public void LoadContainedSubnetworks()
@@ -67,43 +73,193 @@ namespace Subnetwork
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
+            List<SNPP> SNPPlist = new List<SNPP>();
             //wysyla do RC żądanie listy SNPP, a on odsyła bo jest grzeczny
-            return new List<SNPP>();
+            //TODO dodac wywolanie metody serwera, zeby wyslal RouteTableQuery
+
+            return SNPPlist;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNP connectionBegin, SNPP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNP connectionEnd)
         {
             //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            return null;
+            Tuple<SNP, SNP> SNPpair = null;
+            return SNPpair;
         }
 
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
         // % % % % % % % % % % % % % % % % % % % % % % % % % //
 
-        private bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
+        public bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
+            string PathEndAddressFromDifferentDomain = null;
+
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
+
+            //sprawdza, czy adres koncowy jest w tej samej domenie
+            if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(SubnetworkAddress), IPAddress.Parse(SubnetworkMask)))
+            {
+                PathEndAddressFromDifferentDomain = pathEnd;
+            }
+
             List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
 
-
-            for (int index = 0; index < SNPPList.Count; index +=2)
+            for (int index = 0; index < SNPPList.Count; index += 2)
             {
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
                 Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                SNPList.Add(SNPpair.Item1);
+                SNPList.Add(SNPpair.Item2);
+            }
+
+            for (int index = 0; index < SNPList.Count; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+
+                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                {
+                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    {
+                        LogClass.Log("Subnetwork Connection set properly.");                        
+                    }
+                    else
+                    {
+                        LogClass.Log("Epic fail.");                        
+                        return false;
+                    }
+                }
+            }
+
+            if (PathEndAddressFromDifferentDomain != null)
+            {
+                SNP lastSNPinThisDomain = SNPList.Last();
+                if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                {
+                    LogClass.Log("PeerCoordination OK.");                    
+                }
+                else
+                {
+                    LogClass.Log("PeerCoordination FAIL.");                    
+                };
+            }
+
+            return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+
+        public bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
+        {
+            List<SNPP> SNPPList = RouteTableQuery(SNPpathBegin.Address, SNPpathEnd.Address, SNPpathBegin.OccupiedCapacity);
+            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
+
+
+            for (int index = 0; index < SNPPList.Count; index += 2)
+            {
+                SNPP SNPPpathBegin = SNPPList[index];
+                SNPP SNPPpathEnd = SNPPList[index + 1];
+                Tuple<SNP, SNP> SNPpair = null;
+
+                if (index == 0)
+                {
+                    SNPpair = LinkConnectionRequest(SNPpathBegin, SNPPpathEnd);
+                }
+                else if (index == SNPPList.Count - 2)
+                {
+                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPpathEnd);
+                }
+                else
+                {
+                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+
+                SNPList.Add(SNPpair.Item1);
+                SNPList.Add(SNPpair.Item2);
+            }
+
+            for (int index = 0; index < SNPList.Count; index++)
+            {
+                SNP pathBegin = SNPList[index];
+                SNP pathEnd = SNPList[index + 1];
+
+                if (!IsOnLinkList(pathBegin, pathEnd))
+                {
+                    if (ConnectionRequestOut(pathBegin, pathEnd))
+                    {
+                        LogClass.Log("Subnetwork Connection set properly");
+                    }
+                    else
+                    {
+                        LogClass.Log("Epic fail.");
+                        return false;
+                    }
+                }
+
+            }
+            return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+
+        private bool IsOnLinkList(SNP SNPstart, SNP SNPend)
+        {
+            //sprawdza, czy ma taka pare na liscie 
+            foreach (Link link in linkList)
+            {
+                if (link.FirstSNPP.Address == SNPstart.Address && link.SecondSNPP.Address == SNPend.Address)
+                    return true;
+            }
+            return false;
+        }
+
+        private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
+        {
+            //wysyla do cc poziom niżej wiadomosc connection request
+            IPAddress subnetworkAddress;
+
+            foreach (SubnetworkAddress sub in containedSubnetworksAddresses)
+            {
+                if (IPAddressExtensions.IsInSameSubnet(sub.subnetAddress, IPAddress.Parse(pathBegin.Address), sub.subnetMask))
+                    subnetworkAddress = sub.subnetAddress;
+            }
+
+            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetworkAddress);
+
+            return true;
+        }
+
+        public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)
+        {
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
+            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
+
+            for (int index = 0; index < SNPPList.Count; index += 2)
+            {
+                
+                SNPP SNPPpathBegin = SNPPList[index];
+                SNPP SNPPpathEnd = SNPPList[index + 1];
+                Tuple<SNP, SNP> SNPpair = null;
+                if (index == 0)
+                {
+                    SNPpair = LinkConnectionRequest(pathBegin, SNPPpathEnd);
+                } else
+                {
+                  SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+                 
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
@@ -125,83 +281,14 @@ namespace Subnetwork
                         return false;
                     }
                 }
-
             }
+
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        private bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
+        private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
-            List<SNPP> SNPPList = RouteTableQuery(SNPpathBegin.Address, SNPpathEnd.Address, SNPpathBegin.OccupiedCapacity);
-            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
-
-
-            for (int index = 0; index < SNPPList.Count; index += 2)
-            {
-                SNPP SNPPpathBegin = SNPPList[index];
-                SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = null;
-
-                if (index == 0)
-                {
-                    SNPpair = LinkConnectionRequest(SNPpathBegin, SNPPpathEnd);
-                }
-                else if (index == SNPPList.Count - 2)
-                {
-                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPpathEnd);
-
-                }
-                else
-                {
-                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
-                }
-
-                SNPList.Add(SNPpair.Item1);
-                SNPList.Add(SNPpair.Item2);
-            }
-
-            for (int index = 0; index < SNPList.Count; index++)
-            {
-                SNP pathBegin = SNPList[index];
-                SNP pathEnd = SNPList[index + 1];
-
-                if (!IsOnLinkList(pathBegin, pathEnd))
-                {
-                    if (ConnectionRequestOut(pathBegin, pathEnd))
-                    {
-                        Console.WriteLine("Subnetwork Connection set properly");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Epic fail");
-                        return false;
-                    }
-                }
-
-            }
-            return true;  //Jesli polaczenie zestawiono poprawnie
-        }
-
-        private bool IsOnLinkList(SNP SNPstart, SNP SNPend)
-        {
-
-            //sprawdza, czy ma taka pare na liscie
-            return true;
-        }
-
-        private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
-        {
-            //wysyla do cc poziom niżej wiadomosc connection request
-            return true;
-        }
-
-        public bool PeerCoordinationIn(SNP SNPPpathBegin, SNPP SNPpathEnd)
-        {
-            return true;
-        }
-
-        private bool PeerCoordinationOut()
-        {
+            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd);
             return true;
         }
 

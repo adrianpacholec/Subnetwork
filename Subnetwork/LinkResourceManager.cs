@@ -144,6 +144,7 @@ namespace Subnetwork
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+            Topology(SNPpathBegin);
 
             //generuje nowy label
             int potentiallyNewLabel = GimmeNewLabel();
@@ -155,6 +156,7 @@ namespace Subnetwork
             //tworzenie SNP koncowego SNPP
             SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
             SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
+            Topology(SNPpathEnd);
 
             SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);
             return SNPpair;
@@ -168,6 +170,7 @@ namespace Subnetwork
 
             //dodaje otrzymane SNP do odpowiadajacego mu SNPP
             SNPsbySNPPaddress[pathBegin.Address].Add(pathBegin);
+            Topology(pathBegin);
 
             //generuje nowy label
             int potentiallyNewLabel = GimmeNewLabel();
@@ -179,7 +182,8 @@ namespace Subnetwork
             //tworzenie SNP koncowego SNPP
             SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
             SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
-
+            Topology(SNPpathEnd);
+         
             SNPpair = new Tuple<SNP, SNP>(pathBegin, SNPpathEnd);
             return SNPpair;
         }
@@ -196,9 +200,11 @@ namespace Subnetwork
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+            Topology(SNPpathBegin);
 
             //dodaje otrzymane SNP do odpowiadajacego mu SNPP
             SNPsbySNPPaddress[pathEnd.Address].Add(pathEnd);
+            Topology(pathEnd);
 
             SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, pathEnd);
             return SNPpair;
@@ -219,7 +225,7 @@ namespace Subnetwork
         private void Topology(SNP localTopologyUpdate)
         {
             //wysyła SNP, które zostało uaktualnione do RC
-
+            
         }
 
 
