@@ -132,28 +132,24 @@ namespace Subnetwork
             }
             return SNPpair;
         }
- 
+
         private Tuple<SNP, SNP> SNPPandSNPP(SNPP pathBegin, SNPP pathEnd, int capacity)
         {
             List<SNP> existingSNPs = new List<SNP>();
             Tuple<SNP, SNP> SNPpair;
             SNP SNPpathBegin, SNPpathEnd;
 
-            //sprawdz, czy label z kieszonki nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];
-            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();            
-            //tworzenie SNP poczatkowego SNPP
-            SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
-            SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
-            Topology(SNPpathBegin);
-
             //generuje nowy label
             int potentiallyNewLabel = GimmeNewLabel();
             //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
-            while (existingSNPs.Find(x => x.Label == potentiallyNewLabel) != null) potentiallyNewLabel = GimmeNewLabel();
-            //pobiera liste SNP koncowego SNPP
-            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
+            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
+            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
+
+            //tworzenie SNP poczatkowego SNPP
+            SNPpathBegin = new SNP(potentiallyNewLabel, pathBegin.Address, capacity); //uses remembered label
+            SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+            Topology(SNPpathBegin);
+
             //tworzenie SNP koncowego SNPP
             SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
             SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
@@ -169,22 +165,15 @@ namespace Subnetwork
             Tuple<SNP, SNP> SNPpair;
             SNP SNPpathEnd;
 
-            //dodaje otrzymane SNP do odpowiadajacego mu SNPP
+            //wpisanie do tablicka otrzymanego SNP
             SNPsbySNPPaddress[pathBegin.Address].Add(pathBegin);
             Topology(pathBegin);
 
-            //generuje nowy label
-            int potentiallyNewLabel = GimmeNewLabel();
-            //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
-            while (existingSNPs.Find(x => x.Label == potentiallyNewLabel) != null) potentiallyNewLabel = GimmeNewLabel();
-            //pobiera liste SNP koncowego SNPP
-            existingSNPs = SNPsbySNPPaddress[pathEnd.Address];
             //tworzenie SNP koncowego SNPP
-            SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
+            SNPpathEnd = new SNP(pathBegin.Label, pathEnd.Address, capacity); //uses generated label
             SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
             Topology(SNPpathEnd);
-         
+
             SNPpair = new Tuple<SNP, SNP>(pathBegin, SNPpathEnd);
             return SNPpair;
         }
@@ -195,17 +184,14 @@ namespace Subnetwork
             Tuple<SNP, SNP> SNPpair;
             SNP SNPpathBegin;
 
-            //sprawdz, czy label z kieszonki nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];
-            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
-            //tworzenie SNP poczatkowego SNPP
-            SNPpathBegin = new SNP(rememberedLabel, pathBegin.Address, capacity); //uses remembered label
+            //wpisanie do tablicka otrzymanego SNP
+            SNPsbySNPPaddress[pathBegin.Address].Add(pathEnd);
+            Topology(pathEnd);
+
+            //tworzenie SNP koncowego SNPP
+            SNPpathBegin = new SNP(pathEnd.Label, pathBegin.Address, capacity); //uses generated label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
             Topology(SNPpathBegin);
-
-            //dodaje otrzymane SNP do odpowiadajacego mu SNPP
-            SNPsbySNPPaddress[pathEnd.Address].Add(pathEnd);
-            Topology(pathEnd);
 
             SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, pathEnd);
             return SNPpair;
