@@ -12,17 +12,16 @@ namespace Subnetwork
     {
         private List<SNPP> SNPPList;
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
-        private Dictionary<string, List<Tuple<string, string>>> OtherDomainSNPPAddressTranslation;
+        private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> OtherDomainSNPPAddressTranslation;
         private string SubnetworkAddress = null;
         Router router;
 
-        //nie wiem czy to potrzebne, ale przekazuje to do routera wiec moze tez tu sie przyda
         private List<SubnetworkAddress> containedSubnetworks;
         private List<Link> links;
         
         internal void testRouting()
         {
-            RouteTableQuery("10.1.64.0", "10.1.196.0", 20);
+            RouteTableQuery(IPAddress.Parse("10.1.64.0"), IPAddress.Parse("10.1.196.0"), 20);
         }
 
         public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
@@ -31,29 +30,33 @@ namespace Subnetwork
             this.links = links;
             SNPPList = new List<SNPP>();
             router = new Router(containedSubnetworks, links);
-            OtherDomainSNPPAddressTranslation = new Dictionary<string, List<Tuple<string, string>>>();
+            OtherDomainSNPPAddressTranslation = new Dictionary<Subnetwork.SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
+            //OtherDomainSNPPAddressTranslation = loadToOtherDomainSNPPs();
             SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
-        private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
+        private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> loadToOtherDomainSNPPs()
         {
-            foreach (string domainAddress in OtherDomainSNPPAddressTranslation.Keys)
-            {
-                string MASKA_PODSIECI_INNEJ_DOMENY = "255.255.0.0";   //NO TO POPRAWIC
+            throw new NotImplementedException();
+        }
 
+        private List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
+        {
+            foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
+            {
                 //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
-                if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathBegin), IPAddress.Parse(domainAddress), IPAddress.Parse(MASKA_PODSIECI_INNEJ_DOMENY)))
+                if (IPAddressExtensions.IsInSameSubnet(pathBegin, domainAddress.subnetAddress, domainAddress.subnetMask))
                 {
-                    Tuple<string, string> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1 == pathBegin);
-                    string translatedAddress = foundTranslation.Item2;
+                    Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1 == pathBegin);
+                    IPAddress translatedAddress = foundTranslation.Item2;
                     pathBegin = translatedAddress;
                 }
-                else if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(domainAddress), IPAddress.Parse(MASKA_PODSIECI_INNEJ_DOMENY)))
+                else if (IPAddressExtensions.IsInSameSubnet(pathEnd, domainAddress.subnetAddress, domainAddress.subnetMask))
                 {
                     Random random = new Random();
-                    List<Tuple<string, string>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
-                    Tuple<string, string> foundTranslation = translationsList[random.Next(translationsList.Count)];
-                    string translatedAddress = foundTranslation.Item1;
+                    List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
+                    Tuple<IPAddress, IPAddress> foundTranslation = translationsList[random.Next(translationsList.Count)];
+                    IPAddress translatedAddress = foundTranslation.Item1;
                     pathEnd = translatedAddress;
                 }
             }
@@ -62,8 +65,8 @@ namespace Subnetwork
             //2. Robi jakiegoś Djikstre, u nas Floyda bo Komando pozwolił
             //3. Zwraca wyznaczoną ścieżkę
 
-            List<SNPP> scheduled = router.route(IPAddress.Parse(pathBegin), IPAddress.Parse(pathEnd));
-            return new List<SNPP>();
+            List<SNPP> scheduled = router.route(pathBegin, pathEnd);
+            return scheduled;
         }
 
         private void LocalTopologyIn(bool delete, SNP localTopologyUpdate)

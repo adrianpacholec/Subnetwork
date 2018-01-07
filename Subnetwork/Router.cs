@@ -49,15 +49,34 @@ namespace Subnetwork
             int destinationVertexId = subnetworkToVertexId[destination];
             List<Edge> edges=subnetwork.getPath(sourceVertexId, destinationVertexId);
             List<SNPP> translated=translateEdgesToSNPPs(edges);
-            return null;
-            
+            return translated;
         }
 
         private List<SNPP> translateEdgesToSNPPs(List<Edge> edges)
         {
+            int edgeId;
+            SNPP first;
+            SNPP second;
+            Link converted;
+            List<SNPP> translated = new List<SNPP>();
             foreach(Edge edge in edges)
             {
+                edgeId = edge.getid();
+                converted=getLinkByEdgeId(edgeId);
+                first = converted.FirstSNPP;
+                second = converted.SecondSNPP;
+                translated.Add(first);
+                translated.Add(second);
+            }
+            return translated;
+        }
 
+        private Link getLinkByEdgeId(int edgeId)
+        {
+            foreach(KeyValuePair<Link, int> entry in linkAndEdgeIdCorrelation)
+            {
+                if (entry.Value == edgeId)
+                    return entry.Key;
             }
             return null;
         }
