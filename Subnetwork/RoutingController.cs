@@ -13,7 +13,6 @@ namespace Subnetwork
         private List<SNPP> SNPPList;
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
         private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> OtherDomainSNPPAddressTranslation;
-        private string SubnetworkAddress = null;
         Router router;
 
         private List<SubnetworkAddress> containedSubnetworks;
@@ -31,14 +30,10 @@ namespace Subnetwork
             SNPPList = new List<SNPP>();
             router = new Router(containedSubnetworks, links);
             OtherDomainSNPPAddressTranslation = new Dictionary<Subnetwork.SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
-            //OtherDomainSNPPAddressTranslation = loadToOtherDomainSNPPs();
             SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
-        private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> loadToOtherDomainSNPPs()
-        {
-            throw new NotImplementedException();
-        }
+        
 
         private List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
