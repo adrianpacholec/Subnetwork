@@ -17,10 +17,7 @@ namespace Subnetwork
         private List<SubnetworkAddress> containedSubnetworks;
         private List<Link> links;
         
-        internal void testRouting()
-        {
-            RouteTableQuery(IPAddress.Parse("10.1.64.0"), IPAddress.Parse("10.1.196.0"), 20);
-        }
+    
 
         public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
         {
@@ -32,7 +29,7 @@ namespace Subnetwork
             SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
-        private List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
+        public List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
             List<SNPP> scheduled = router.route(pathBegin, pathEnd);
             return scheduled;

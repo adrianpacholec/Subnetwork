@@ -64,7 +64,7 @@ namespace Subnetwork
 
         public void LoadContainedSubnetworks()
         {
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " loading contained subnetworks.");
+            LogClass.Log(" loading contained subnetworks.");
             string fileName = Config.getProperty("ContainedSubnetworks");
             string[] loadedFile = loadFile(fileName);
             string[] subnetworkParams = null;
@@ -98,17 +98,14 @@ namespace Subnetwork
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
-            List<SNPP> SNPPlist = new List<SNPP>();
-            //wysyla do RC żądanie listy SNPP, a on odsyła bo jest grzeczny
-            //TODO dodac wywolanie metody serwera, zeby wyslal RouteTableQuery
+            List<SNPP> SNPPlist = SubnetworkServer.callRouteTableQueryInRC(pathBegin, pathEnd, capacity);
 
             return SNPPlist;
         }
 
-        private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd)
+        private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNPP connectionEnd, int capacity)
         {
-            //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            Tuple<SNP, SNP> SNPpair = null;
+            Tuple<SNP, SNP> SNPpair=SubnetworkServer.callLinkConnectionRequestInLRM(connectionBegin, connectionEnd, capacity);
             return SNPpair;
         }
 
@@ -162,14 +159,14 @@ namespace Subnetwork
 
             //dodaj SNP z labelem 0 dla konca sciezki
             SNPList.Add(new SNP(0, pathEnd, capacity));
-
+            LogClass.Log(" RouteTableQuery called between: " + pathBegin + "and: " + pathEnd);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd, capacity);
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
@@ -219,55 +216,49 @@ namespace Subnetwork
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        public bool ConnectionRequestFromCC(SNP SNPpathBegin, SNP SNPpathEnd)
+        public bool ConnectionRequestFromCC(SNP pathBegin, SNP pathEnd)
         {
-            List<SNPP> SNPPList = RouteTableQuery(SNPpathBegin.Address, SNPpathEnd.Address, SNPpathBegin.OccupiedCapacity);
-            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd.Address, pathBegin.OccupiedCapacity);
 
+            //Lista SNP dla tworzonego aktualnie polaczenia
+            List<SNP> SNPList = new List<SNP>();
+
+            SNPList.Add(pathBegin);
+            SNPList.Add(pathEnd);
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = null;
-
-                if (index == 0)
-                {
-                    SNPpair = LinkConnectionRequest(SNPpathBegin, SNPPpathEnd);
-                }
-                else if (index == SNPPList.Count - 2)
-                {
-                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPpathEnd);
-                }
-                else
-                {
-                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
-                }
-
+                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd, pathBegin.OccupiedCapacity);
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
 
-            for (int index = 0; index < SNPList.Count; index++)
-            {
-                SNP pathBegin = SNPList[index];
-                SNP pathEnd = SNPList[index + 1];
+            //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
 
-                /*if (!IsOnLinkList(pathBegin, pathEnd))
+            for (int index = 0; index < SNPList.Count - 1; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
-                    if (ConnectionRequestOut(pathBegin, pathEnd))
+                    SNP SNPpathEnd = SNPList[jndex];
+
+                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        LogClass.Log("Subnetwork Connection set properly");
-                    }
-                    else
-                    {
-                        LogClass.Log("Epic fail.");
-                        return false;
+                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        {
+                            LogClass.Log("Subnetwork Connection set properly.");
+                        }
+                        else
+                        {
+                            LogClass.Log("Epic fail.");
+                            return false;
+                        }
                     }
                 }
-                */
-
             }
+
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
@@ -316,8 +307,7 @@ namespace Subnetwork
                     IPAddress translatedAddress = foundTranslation.Item2;
                     pathBegin.Address = translatedAddress.ToString();
                 }
-
-            }
+             }
 
             //przepustowosc bierzemy z przekazanego SNP
 
@@ -330,7 +320,7 @@ namespace Subnetwork
             {
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd, pathBegin.OccupiedCapacity);
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
