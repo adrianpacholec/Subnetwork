@@ -59,7 +59,7 @@ namespace Subnetwork
         public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, string subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-            CSocket childSubSocket; 
+            CSocket childSubSocket;
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
@@ -118,7 +118,7 @@ namespace Subnetwork
             while (true)
             {
                 CSocket connected = listeningSocket.Accept();
-                LogClass.Log("Connected.");                
+                LogClass.Log("Connected.");
                 waitForInputFromSocketInAnotherThread(connected);
             }
 
@@ -148,7 +148,7 @@ namespace Subnetwork
                     String sourceIP = parameters.getFirstParameter();
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
-                    LogClass.Log("Received CONNECTION REQUEST from NCC.");                    
+                    LogClass.Log("Received CONNECTION REQUEST from NCC.");
                     connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
 
                 }
@@ -186,7 +186,7 @@ namespace Subnetwork
         {
             for (int i = 0; i < receivedList.Count; i++)
                 routingController.AddSNPP(receivedList.ElementAt(i));
-        }    
+        }
 
 
     }

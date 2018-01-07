@@ -119,6 +119,9 @@ namespace Subnetwork
 
             List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
 
+            //dodaj SNP z labelem 0 dla poczatku sciezki
+            SNPList.Add(new SNP(0, pathBegin, capacity));
+
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
                 SNPP SNPPpathBegin = SNPPList[index];
@@ -128,35 +131,41 @@ namespace Subnetwork
                 SNPList.Add(SNPpair.Item2);
             }
 
-            for (int index = 0; index < SNPList.Count; index++)
+            for (int index = 0; index < SNPList.Count - 1; index++)
             {
                 SNP SNPpathBegin = SNPList[index];
-                SNP SNPpathEnd = SNPList[index + 1];
-
-                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
-                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    SNP SNPpathEnd = SNPList[jndex];
+
+                    if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
                     {
-                        LogClass.Log("Subnetwork Connection set properly.");                        
-                    }
-                    else
-                    {
-                        LogClass.Log("Epic fail.");                        
-                        return false;
+                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        {
+                            LogClass.Log("Subnetwork Connection set properly.");
+                        }
+                        else
+                        {
+                            LogClass.Log("Epic fail.");
+                            return false;
+                        }
                     }
                 }
+
             }
 
             if (PathEndAddressFromDifferentDomain != null)
             {
+                //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
                 SNP lastSNPinThisDomain = SNPList.Last();
+
                 if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
-                    LogClass.Log("PeerCoordination OK.");                    
+                    LogClass.Log("PeerCoordination OK.");
                 }
                 else
                 {
-                    LogClass.Log("PeerCoordination FAIL.");                    
+                    LogClass.Log("PeerCoordination FAIL.");
                 };
             }
 
@@ -248,18 +257,19 @@ namespace Subnetwork
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
-                
+
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
                 Tuple<SNP, SNP> SNPpair = null;
                 if (index == 0)
                 {
                     SNPpair = LinkConnectionRequest(pathBegin, SNPPpathEnd);
-                } else
-                {
-                  SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
                 }
-                 
+                else
+                {
+                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
+                }
+
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
