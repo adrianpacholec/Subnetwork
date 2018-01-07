@@ -12,7 +12,6 @@ namespace Subnetwork
     {
         private List<SNPP> SNPPList;
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
-        private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> OtherDomainSNPPAddressTranslation;
         Router router;
 
         private List<SubnetworkAddress> containedSubnetworks;
@@ -29,33 +28,12 @@ namespace Subnetwork
             this.links = links;
             SNPPList = new List<SNPP>();
             router = new Router(containedSubnetworks, links);
-            OtherDomainSNPPAddressTranslation = new Dictionary<Subnetwork.SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
+          
             SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
-        
-
         private List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
-            foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
-            {
-                //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
-                if (IPAddressExtensions.IsInSameSubnet(pathBegin, domainAddress.subnetAddress, domainAddress.subnetMask))
-                {
-                    Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1 == pathBegin);
-                    IPAddress translatedAddress = foundTranslation.Item2;
-                    pathBegin = translatedAddress;
-                }
-                else if (IPAddressExtensions.IsInSameSubnet(pathEnd, domainAddress.subnetAddress, domainAddress.subnetMask))
-                {
-                    Random random = new Random();
-                    List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
-                    Tuple<IPAddress, IPAddress> foundTranslation = translationsList[random.Next(translationsList.Count)];
-                    IPAddress translatedAddress = foundTranslation.Item1;
-                    pathEnd = translatedAddress;
-                }
-            }
-
             //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
             //2. Robi jakiegoś Djikstre, u nas Floyda bo Komando pozwolił
             //3. Zwraca wyznaczoną ścieżkę
