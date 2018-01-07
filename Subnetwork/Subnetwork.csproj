@@ -70,7 +70,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\customSocket\CustomSocket.csproj">
+    <ProjectReference Include="..\..\..\..\..\Documents\Visual Studio 2015\Projects\CustomSocket\CustomSocket\CustomSocket.csproj">
       <Project>{a0c09126-9dd3-4857-8c90-ec2b090beb11}</Project>
       <Name>CustomSocket</Name>
     </ProjectReference>

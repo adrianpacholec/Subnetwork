@@ -33,6 +33,42 @@ namespace Subnetwork
 
         }
 
+        public void LoadLinks()
+        {
+            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " loading links in subnetwork:");
+            string fileName = Config.getProperty("subnetworkLinks");
+            string[] loadedFile = LoadFile(fileName);
+            string[] subnetworkParams = null;
+            string firstNodeAddress = null;
+            int firstNodeCapacity;
+            string secondNodeAddress = null;
+            int secondNodeCapacity;
+            SNPP firstSNPP = null;
+            SNPP secondSNPP = null;
+
+            foreach (string str in loadedFile)
+            {
+                subnetworkParams = str.Split(PARAM_SEPARATOR);
+                firstNodeAddress = subnetworkParams[LINK_NODE_A_POSITION];
+                firstNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_A_CAPACITY_POSITION]);
+                secondNodeAddress = subnetworkParams[LINK_NODE_B_POSITION];
+                secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
+                firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
+                secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
+                Links.Add(new Link(firstSNPP, secondSNPP));
+                myEdgeSNPPs.Add(firstSNPP);
+                myEdgeSNPPs.Add(secondSNPP);
+                Console.WriteLine(str);
+            }
+        }
+
+        public void addEdgeSNPP(SNPP snpp)
+        {
+            myEdgeSNPPs.Add(snpp);
+        }
+
+
+
         /*
         private void LoadEdgeSNPPsFromFile()
         {
@@ -64,36 +100,7 @@ namespace Subnetwork
         }
 
 
-        public void LoadLinks()
-        {
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " loading links in subnetwork:");
-            string fileName = Config.getProperty("subnetworkLinks");
-            string[] loadedFile = LoadFile(fileName);
-            string[] subnetworkParams = null;
-            string firstNodeAddress = null;
-            int firstNodeCapacity;
-            string secondNodeAddress = null;
-            int secondNodeCapacity;
-            SNPP firstSNPP = null;
-            SNPP secondSNPP = null;
-
-            foreach (string str in loadedFile)
-            {
-                subnetworkParams = str.Split(PARAM_SEPARATOR);
-                firstNodeAddress = subnetworkParams[LINK_NODE_A_POSITION];
-                firstNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_A_CAPACITY_POSITION]);
-                secondNodeAddress = subnetworkParams[LINK_NODE_B_POSITION];
-                secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
-                firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
-                secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
-                Links.Add(new Link(firstSNPP, secondSNPP));
-                myEdgeSNPPs.Add(firstSNPP);
-                myEdgeSNPPs.Add(secondSNPP);
-                Console.WriteLine(str);
-            }
-        }
-
-
+    
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
         // % % % % % % % % % % % % % % % % % % % % % % % % % //

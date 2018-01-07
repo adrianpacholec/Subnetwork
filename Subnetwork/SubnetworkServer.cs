@@ -66,14 +66,17 @@ namespace Subnetwork
 
         private static void LoadPortsToAnotherDomains()
         {
-            string fileName = Config.getProperty("portsToDomains");
+            string fileName = Config.getProperty("realPortsToDomains");
             string[] loadedFile = LoadFile(fileName);
             string[] parameters = null;
             Console.WriteLine(DateTime.Now.ToString("HH:mm:ss")+" loaded ports to another domains");
             foreach (string str in loadedFile)
-            {
-                parameters = str.Split(PARAM_SEPARATOR);
-                SocketsToAnotherDomains.Add(new SubnetworkAddress(parameters[SUBNETWORK_ADDRESS_POSITION], parameters[SUBNETWORK_MASK_POSITION]), Int32.Parse(parameters[PORT_POSITION]));
+            { 
+                if(str[0] != '#')
+                {
+                    parameters = str.Split(PARAM_SEPARATOR);
+                    SocketsToAnotherDomains.Add(new SubnetworkAddress(parameters[SUBNETWORK_ADDRESS_POSITION], parameters[SUBNETWORK_MASK_POSITION]), Int32.Parse(parameters[PORT_POSITION]));
+                }
             }
         }
 

@@ -18,6 +18,19 @@ namespace Subnetwork
             this.subnetMask = IPAddress.Parse(subnetMask);
         }
 
+       /* public override bool Equals(Object obj)
+        {
+            SubnetworkAddress address = (SubnetworkAddress)obj;
+            if (subnetAddress.Equals(address.subnetAddress) && subnetAddress.Equals(address.subnetMask))
+                return true;
+            else return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return subnetAddress.GetHashCode() + subnetMask.GetHashCode();
+        }
+        */
 
     }
 }

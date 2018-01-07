@@ -39,6 +39,28 @@ namespace Subnetwork
             linkList = new List<Link>();
             LoadContainedSubnetworks();
         }
+        
+        public void addKeyToDictionary(SubnetworkAddress key)
+        {
+            if(!OtherDomainSNPPAddressTranslation.ContainsKey(key))
+                 OtherDomainSNPPAddressTranslation.Add(key, new List<Tuple<IPAddress, IPAddress>>());
+        }
+
+        public void addValueToDictionary(SubnetworkAddress key, Tuple<IPAddress, IPAddress> value)
+        {
+            List<Tuple<IPAddress, IPAddress>> list=getFromDictionary(key);
+            list.Add(value);
+        }
+
+        public List<Tuple<IPAddress, IPAddress>> getFromDictionary(SubnetworkAddress address)
+        {
+            foreach(KeyValuePair<SubnetworkAddress, List<Tuple<IPAddress,IPAddress>>>entry in OtherDomainSNPPAddressTranslation)
+            {
+                if (entry.Key.subnetAddress.Equals(address.subnetAddress) && entry.Key.subnetMask.Equals(address.subnetMask))
+                    return entry.Value;
+            }
+            return null;
+        }
 
         public void LoadContainedSubnetworks()
         {
@@ -123,19 +145,19 @@ namespace Subnetwork
                 foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
                 {
                     //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
-                    if (IPAddressExtensions.IsInSameSubnet(pathBegin, domainAddress.subnetAddress, domainAddress.subnetMask))
+                    if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathBegin), domainAddress.subnetAddress, domainAddress.subnetMask))
                     {
-                        Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1 == pathBegin);
+                        Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1.Equals(IPAddress.Parse(pathBegin)));
                         IPAddress translatedAddress = foundTranslation.Item2;
-                        pathBegin = translatedAddress;
+                        pathBegin = translatedAddress.ToString();
                     }
-                    else if (IPAddressExtensions.IsInSameSubnet(pathEnd, domainAddress.subnetAddress, domainAddress.subnetMask))
+                    else if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
                     {
                         Random random = new Random();
                         List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
                         Tuple<IPAddress, IPAddress> foundTranslation = translationsList[random.Next(translationsList.Count)];
                         IPAddress translatedAddress = foundTranslation.Item1;
-                        pathEnd = translatedAddress;
+                        pathEnd = translatedAddress.ToString();
                     }
                 }
 
