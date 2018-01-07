@@ -34,10 +34,6 @@ namespace Subnetwork
 
         private List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
-            //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
-            //2. Robi jakiegoś Djikstre, u nas Floyda bo Komando pozwolił
-            //3. Zwraca wyznaczoną ścieżkę
-
             List<SNPP> scheduled = router.route(pathBegin, pathEnd);
             return scheduled;
         }
