@@ -17,7 +17,12 @@ namespace Subnetwork
         public const String SNPP_SUBNETWORK_INFORMATION = "snppSubnetworkInformation";
         public const String NETWORK_TOPOLOGY = "networkTopology";
         public const String OPERATED_SUBNETWORK = "operatedSubnetwork";
+        public const String OPERATED_SUBNETWORK_MASK = "operatedSubnetworkMask";
         public const String CONNECTION_REQEST = "connectionRequest";
+        public const char PARAM_SEPARATOR = ' ';
+        public const int SUBNETWORK_ADDRESS_POSITION = 0;
+        public const int SUBNETWORK_MASK_POSITION = 1;
+        public const int PORT_POSITION = 2;
 
 
         private static ConnectionController connectionController;
@@ -26,14 +31,16 @@ namespace Subnetwork
         private static CSocket listeningSocket;
         private static CSocket toParentSocket;
         private static CSocket toNCCSocket;
-        private static Dictionary<String, CSocket> SocketsByAddress;
+        private static Dictionary<SubnetworkAddress, CSocket> SocketsByAddress;
+        private static Dictionary<SubnetworkAddress, int> SocketsToAnotherDomains;
 
         public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
             connectionController = cc;
             routingController = rc;
             linkResourceManager = lrm;
-            SocketsByAddress = new Dictionary<string, CSocket>();
+            SocketsByAddress = new Dictionary<SubnetworkAddress, CSocket>();
+            SocketsToAnotherDomains = new Dictionary<SubnetworkAddress, int>();
             String parentSubnetworkAddress = Config.getProperty("ParentSubnetworkAddress");
             if (parentSubnetworkAddress != null)
             {
@@ -42,6 +49,7 @@ namespace Subnetwork
                 SendMySubnetworkInformation();
             }
             initListeningCustomSocket();
+            LoadPortsToAnotherDomains();
         }
 
         private static void ConnectToParentSubnetwork(IPAddress parentSubnetworkAddress, int parentSubnetworkPort)
@@ -56,7 +64,26 @@ namespace Subnetwork
 
         }
 
-        public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, string subnetworkAddress)
+        private static void LoadPortsToAnotherDomains()
+        {
+            string fileName = Config.getProperty("portsToDomains");
+            string[] loadedFile = LoadFile(fileName);
+            string[] parameters = null;
+            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss")+" loaded ports to another domains");
+            foreach (string str in loadedFile)
+            {
+                parameters = str.Split(PARAM_SEPARATOR);
+                SocketsToAnotherDomains.Add(new SubnetworkAddress(parameters[SUBNETWORK_ADDRESS_POSITION], parameters[SUBNETWORK_MASK_POSITION]), Int32.Parse(parameters[PORT_POSITION]));
+            }
+        }
+
+        private static string[] LoadFile(String fileName)
+        {
+            string[] fileLines = System.IO.File.ReadAllLines(fileName);
+            return fileLines;
+        }
+
+        public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
             CSocket childSubSocket;
@@ -74,19 +101,39 @@ namespace Subnetwork
             //i teraz dam tak, że w słoniku po tym adresie on wyszuka ten socket, potem się to zmieni
 
             Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
-            CSocket otherDomainSocket;
-            bool hasValue = SocketsByAddress.TryGetValue(AddressPathEnd, out otherDomainSocket);
-            if (hasValue)
+            CSocket otherDomainSocket = GetSocketToDomain(AddressPathEnd);
+            otherDomainSocket.SendObject(PEER_COORDINATION,peerTuple);
+            object zrobictuzebyodbieraltruealbofalse=otherDomainSocket.ReceiveObject();
+            otherDomainSocket.Close();
+        }
+
+        public static CSocket GetSocketToDomain(string address)
+        {
+            IPAddress ipAddress = IPAddress.Parse(address);
+            SubnetworkAddress found= null;
+            foreach (SubnetworkAddress domainAddress in SocketsByAddress.Keys)
             {
-                otherDomainSocket.SendObject(CONNECTION_REQEST, peerTuple);
+                if (IPAddressExtensions.IsInSameSubnet(ipAddress, domainAddress.subnetAddress, domainAddress.subnetMask))
+                    found = domainAddress;
             }
+            return createSocketToOtherDomain(found);
+        }
+
+        public static CSocket createSocketToOtherDomain(SubnetworkAddress address)
+        {
+            int port=SocketsToAnotherDomains[address];
+            CSocket socket = new CSocket(IPAddress.Parse("localhost"), port, CSocket.CONNECT_FUNCTION);
+            return socket;
         }
 
         private static object getSubnetworkInformation()
         {
             Dictionary<string, string> mySubnetworkInformation = new Dictionary<string, string>();
             string mySubnetworkAddress = Config.getProperty(OPERATED_SUBNETWORK);
+            string mySubnetworkMask = Config.getProperty(OPERATED_SUBNETWORK_MASK);
+            SubnetworkAddress address = new SubnetworkAddress(mySubnetworkAddress, mySubnetworkMask);
             mySubnetworkInformation.Add(OPERATED_SUBNETWORK, mySubnetworkAddress);
+            mySubnetworkInformation.Add(OPERATED_SUBNETWORK_MASK, mySubnetworkMask);
             return mySubnetworkInformation;
         }
 
@@ -154,7 +201,7 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
-                    Tuple<SNP, SNPP> receivedPair = (Tuple<SNP, SNPP>)receivedObject;
+                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
                     connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     LogClass.Log("Received PEER COORDINATION from AS_1");
                 }
@@ -172,12 +219,13 @@ namespace Subnetwork
             if (receivedInformation.Count == 0)
             {
                 toNCCSocket = connectedSocket;
-
             }
             else
             {
                 String operatedSubnetwork = receivedInformation[OPERATED_SUBNETWORK];
-                SocketsByAddress.Add(operatedSubnetwork, connectedSocket);
+                String operatedSubnetworkMask = receivedInformation[OPERATED_SUBNETWORK_MASK];
+                SubnetworkAddress connectedSubnetAddress = new SubnetworkAddress(operatedSubnetwork, operatedSubnetworkMask);
+                SocketsByAddress.Add(connectedSubnetAddress, connectedSocket);
                 LogClass.Log("Subnetwork " + operatedSubnetwork + " connected");
             }
         }
@@ -188,6 +236,9 @@ namespace Subnetwork
                 routingController.AddSNPP(receivedList.ElementAt(i));
         }
 
-
+            public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
+        {
+            // Maciek zrób tu co chcesz xD
+        }
     }
 }

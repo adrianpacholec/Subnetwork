@@ -11,9 +11,10 @@ namespace Subnetwork
         static void Main(string[] args)
         {
             ConnectionController CC = new ConnectionController();
-            RoutingController RC = new RoutingController();
             LinkResourceManager LRM = new LinkResourceManager();
+            RoutingController RC = new RoutingController(CC.ContainedSubnetworksAddresses, LRM.Links);
             SubnetworkServer.init(CC, RC, LRM);
+            RC.testRouting();
             Console.ReadLine();
         }
     }
