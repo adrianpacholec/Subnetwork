@@ -112,9 +112,14 @@ namespace Subnetwork
         {
             string PathEndAddressFromDifferentDomain = null;
 
-            List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
+            //Lista SNP dla tworzonego aktualnie polaczenia
+            List<SNP> SNPList = new List<SNP>();
 
-            //sprawdza, czy adres koncowy jest w tej samej domenie
+            //zakladamy, ze adres poczatkowy zawsze jest w naszej domenie, jezeli dostalismy requesta od NCC
+            //dodaj SNP z labelem 0 dla poczatku sciezki
+            SNPList.Add(new SNP(0, pathBegin, capacity));
+
+            //sprawdzamy, czy adres koncowy jest w naszej domenie
             if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(SubnetworkAddress), IPAddress.Parse(SubnetworkMask)))
             {
                 PathEndAddressFromDifferentDomain = pathEnd;
@@ -122,32 +127,21 @@ namespace Subnetwork
                 //sprawdza, czy adres docelowy jest w innej podsieci i podmienia
                 foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
                 {
-                    //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
-                    if (IPAddressExtensions.IsInSameSubnet(pathBegin, domainAddress.subnetAddress, domainAddress.subnetMask))
-                    {
-                        Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1 == pathBegin);
-                        IPAddress translatedAddress = foundTranslation.Item2;
-                        pathBegin = translatedAddress;
-                    }
-                    else if (IPAddressExtensions.IsInSameSubnet(pathEnd, domainAddress.subnetAddress, domainAddress.subnetMask))
+                    if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
                     {
                         Random random = new Random();
                         List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
                         Tuple<IPAddress, IPAddress> foundTranslation = translationsList[random.Next(translationsList.Count)];
                         IPAddress translatedAddress = foundTranslation.Item1;
-                        pathEnd = translatedAddress;
+                        pathEnd = translatedAddress.ToString();
                     }
                 }
-
-
             }
 
-            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
+            //dodaj SNP z labelem 0 dla konca sciezki
+            SNPList.Add(new SNP(0, pathEnd, capacity));
 
-            //dodaj SNP z labelem 0 dla poczatku sciezki
-            SNPList.Add(new SNP(0, pathBegin, capacity));
-
-            
+            List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
@@ -158,6 +152,8 @@ namespace Subnetwork
                 SNPList.Add(SNPpair.Item2);
             }
 
+            //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
+
             for (int index = 0; index < SNPList.Count - 1; index++)
             {
                 SNP SNPpathBegin = SNPList[index];
@@ -165,7 +161,7 @@ namespace Subnetwork
                 {
                     SNP SNPpathEnd = SNPList[jndex];
 
-                    if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
                         if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
@@ -180,6 +176,8 @@ namespace Subnetwork
                 }
 
             }
+
+            //Wyslanie PeerCoordination jezeli zestawiane polaczenie przebiega przez 2 domeny
 
             if (PathEndAddressFromDifferentDomain != null)
             {
@@ -250,12 +248,12 @@ namespace Subnetwork
             return true;  //Jesli polaczenie zestawiono poprawnie
         }
 
-        private bool IsOnLinkList(SNP SNPstart, SNP SNPend)
+        private bool BelongsToSubnetwork(SNP SNPstart, SNP SNPend)
         {
             //sprawdza, czy ma taka pare na liscie 
-            foreach (Link link in linkList)
+            foreach (SubnetworkAddress subAddress in ContainedSubnetworksAddresses)
             {
-                if (link.FirstSNPP.Address == SNPstart.Address && link.SecondSNPP.Address == SNPend.Address)
+                if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(SNPstart.Address), IPAddress.Parse(SNPend.Address), subAddress.subnetMask))
                     return true;
             }
             return false;
@@ -282,43 +280,58 @@ namespace Subnetwork
 
         public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)
         {
+
+            //Lista SNP dla tworzonego aktualnie polaczenia
+            List<SNP> SNPList = new List<SNP>();
+
+            //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
+            foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
+            {
+                if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathBegin.Address), domainAddress.subnetAddress, domainAddress.subnetMask))
+                {
+                    Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1.ToString() == pathBegin.Address);
+                    IPAddress translatedAddress = foundTranslation.Item2;
+                    pathBegin.Address = translatedAddress.ToString();
+                }
+
+            }
+
+            //przepustowosc bierzemy z przekazanego SNP
+
+            SNPList.Add(new SNP(0, pathBegin.Address, pathBegin.OccupiedCapacity));
+            SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity));
+
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
-            List<SNP> SNPList = new List<SNP>(); //TODO: nazwac to sensownie
 
             for (int index = 0; index < SNPPList.Count; index += 2)
             {
-
                 SNPP SNPPpathBegin = SNPPList[index];
                 SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = null;
-                if (index == 0)
-                {
-                    SNPpair = LinkConnectionRequest(pathBegin, SNPPpathEnd);
-                }
-                else
-                {
-                    SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
-                }
-
+                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd);
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
 
-            for (int index = 0; index < SNPList.Count; index++)
+            //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
+
+            for (int index = 0; index < SNPList.Count - 1; index++)
             {
                 SNP SNPpathBegin = SNPList[index];
-                SNP SNPpathEnd = SNPList[index + 1];
-
-                if (!IsOnLinkList(SNPpathBegin, SNPpathEnd))
+                for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
-                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    SNP SNPpathEnd = SNPList[jndex];
+
+                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        LogClass.Log("Subnetwork Connection set properly");
-                    }
-                    else
-                    {
-                        LogClass.Log("Epic fail");
-                        return false;
+                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        {
+                            LogClass.Log("Subnetwork Connection set properly.");
+                        }
+                        else
+                        {
+                            LogClass.Log("Epic fail.");
+                            return false;
+                        }
                     }
                 }
             }
