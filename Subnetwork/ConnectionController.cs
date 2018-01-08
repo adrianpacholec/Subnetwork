@@ -136,7 +136,7 @@ namespace Subnetwork
 
             //zakladamy, ze adres poczatkowy zawsze jest w naszej domenie, jezeli dostalismy requesta od NCC
             //dodaj SNP z labelem 0 dla poczatku sciezki
-            SNPList.Add(new SNP(0, pathBegin, capacity));
+            SNPList.Add(new SNP(0, pathBegin, capacity, pathBegin, pathEnd));
 
             //sprawdzamy, czy adres koncowy jest w naszej domenie
             if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(SubnetworkAddress), IPAddress.Parse(SubnetworkMask)))
@@ -159,7 +159,7 @@ namespace Subnetwork
             }
 
             //dodaj SNP z labelem 0 dla konca sciezki
-            SNPList.Add(new SNP(0, pathEnd, capacity));
+            SNPList.Add(new SNP(0, pathEnd, capacity, pathBegin, pathEnd));
             LogClass.Log(" RouteTableQuery called between: " + pathBegin + "and: " + pathEnd);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
 
@@ -312,8 +312,8 @@ namespace Subnetwork
 
             //przepustowosc bierzemy z przekazanego SNP
 
-            SNPList.Add(new SNP(0, pathBegin.Address, pathBegin.OccupiedCapacity));
-            SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity));
+            SNPList.Add(new SNP(0, pathBegin.Address, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
+            SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
 
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
 

@@ -12,13 +12,26 @@ namespace Subnetwork
         public int Label { set; get; }
         public string Address { get; set; }
         public int OccupiedCapacity { get; set; }
+        public string PathBegin { get; set; }
+        public string PathEnd { get; set; }
 
         public SNP(int label, string address, int capacity)
         {
             Label = label;
             Address = address;
             OccupiedCapacity = capacity;
+            PathBegin = null;
+            PathEnd = null;
         }
-       
+
+        public SNP(int label, string address, int capacity, string pathBegin, string pathEnd)
+        {
+            Label = label;
+            Address = address;
+            OccupiedCapacity = capacity;
+            PathBegin = pathBegin;
+            PathEnd = pathEnd;
+        }
+
     }
 }
