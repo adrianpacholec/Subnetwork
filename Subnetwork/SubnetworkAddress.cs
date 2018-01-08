@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
-    class SubnetworkAddress
+    public class SubnetworkAddress
     {
         public IPAddress subnetAddress { get; set; }
         public IPAddress subnetMask { get; set; }
