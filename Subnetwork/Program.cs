@@ -23,7 +23,6 @@ namespace Subnetwork
             RoutingController RC = new RoutingController(CC.ContainedSubnetworksAddresses, LRM.Links);
             SubnetworkServer.init(CC, RC, LRM);
             loadEdgeSNPPs(CC, LRM);
-            RC.testRouting();
             Console.ReadLine();
         }
 

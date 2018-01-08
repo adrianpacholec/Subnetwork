@@ -110,6 +110,12 @@ namespace Subnetwork
             otherDomainSocket.Close();
         }
 
+        public static Tuple<SNP, SNP> callLinkConnectionRequestInLRM(SNPP connectionBegin, SNPP connectionEnd, int capacity)
+        {
+            Tuple<SNP, SNP> SNPpair=linkResourceManager.SNPLinkConnectionRequest(connectionBegin, connectionEnd, capacity);
+            return SNPpair;
+        }
+
         public static CSocket GetSocketToDomain(string address)
         {
             IPAddress ipAddress = IPAddress.Parse(address);
@@ -127,6 +133,11 @@ namespace Subnetwork
             int port=SocketsToAnotherDomains[address];
             CSocket socket = new CSocket(IPAddress.Parse("localhost"), port, CSocket.CONNECT_FUNCTION);
             return socket;
+        }
+
+        public static List<SNPP> callRouteTableQueryInRC(string pathBegin, string pathEnd, int capacity)
+        {
+            return routingController.RouteTableQuery(IPAddress.Parse(pathBegin), IPAddress.Parse(pathEnd), capacity);
         }
 
         private static object getSubnetworkInformation()

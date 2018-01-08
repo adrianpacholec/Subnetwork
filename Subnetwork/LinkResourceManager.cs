@@ -30,6 +30,7 @@ namespace Subnetwork
             rememberedLabel = GimmeNewLabel();
             Links = new List<Link>();
             LoadLinks();
+            SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
 
         }
 
@@ -106,7 +107,7 @@ namespace Subnetwork
         // % % % % % % % % % % % % % % % % % % % % % % % % % //
 
 
-        private Tuple<SNP, SNP> SNPLinkConnectionRequest(Object pathBegin, Object pathEnd, int capacity)
+        public Tuple<SNP, SNP> SNPLinkConnectionRequest(Object pathBegin, Object pathEnd, int capacity)
         {
             Tuple<SNP, SNP> SNPpair = null;
             //LRM dostaje od CC dwa SNPP do stworzenia SNP
@@ -149,9 +150,14 @@ namespace Subnetwork
             //generuje nowy label
             int potentiallyNewLabel = GimmeNewLabel();
             //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
-            while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
+            if (!SNPsbySNPPaddress.ContainsKey(pathBegin.Address))
+            {
+                SNPsbySNPPaddress.Add(pathBegin.Address, new List<SNP>());
+                SNPsbySNPPaddress.Add(pathEnd.Address, new List<SNP>());
+            }
 
+                existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
+                while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(potentiallyNewLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
