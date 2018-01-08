@@ -18,7 +18,7 @@ namespace Subnetwork
         public const String NETWORK_TOPOLOGY = "networkTopology";
         public const String OPERATED_SUBNETWORK = "operatedSubnetwork";
         public const String OPERATED_SUBNETWORK_MASK = "operatedSubnetworkMask";
-        public const String CONNECTION_REQEST = "connectionRequest";
+        public const String CONNECTION_REQEST_FROM_CC = "connectionRequest";
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -61,6 +61,7 @@ namespace Subnetwork
         {
             object toSend = getSubnetworkInformation();
             toParentSocket.SendObject(OPERATED_SUBNETWORK, toSend);
+            waitForInputFromSocketInAnotherThread(toParentSocket);
 
         }
 
@@ -90,13 +91,10 @@ namespace Subnetwork
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
             CSocket childSubSocket;
-            SubnetworkAddress address = SocketsByAddress.ElementAt(0).Key;
-            int hash = address.GetHashCode();
-            int hash2 = subnetworkAddress.GetHashCode();
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
-                childSubSocket.SendObject(CONNECTION_REQEST, connTuple);
+                childSubSocket.SendObject(CONNECTION_REQEST_FROM_CC, connTuple);
             }
             else
             {
@@ -121,6 +119,11 @@ namespace Subnetwork
         {
             Tuple<SNP, SNP> SNPpair=linkResourceManager.SNPLinkConnectionRequest(connectionBegin, connectionEnd, capacity);
             return SNPpair;
+        }
+
+        private static bool callConnectionRequest(SNP pathBegin, SNP pathEnd)
+        {
+            return connectionController.ConnectionRequestFromCC(pathBegin, pathEnd);
         }
 
         public static CSocket GetSocketToDomain(string address)
@@ -200,7 +203,8 @@ namespace Subnetwork
 
         private static void waitForInput(CSocket connected)
         {
-            ProcessConnectInformations(connected);
+            if(!connected.Equals(toParentSocket))
+                ProcessConnectInformations(connected);
             while (true)
             {
                 Tuple<String, Object> received = connected.ReceiveObject();
@@ -228,6 +232,15 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
+
+                }
+                else if (parameter.Equals(CONNECTION_REQEST_FROM_CC))
+                {
+                    Tuple<SNP, SNP> pathToAssign = (Tuple<SNP,SNP>)received.Item2;
+                    SNP first = pathToAssign.Item1;
+                    SNP second = pathToAssign.Item2;
+                    LogClass.Log("Received CONNECTION REQUEST to set connection between "+ first.Address+" and " + second.Address);
+                    bool response=callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
 
                 }
             }
