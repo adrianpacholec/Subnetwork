@@ -149,18 +149,8 @@ namespace Subnetwork
                 //sprawdza, czy adres docelowy jest w innej podsieci i podmienia
                 foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
                 {
-<<<<<<< HEAD
-                    //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
-                    if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathBegin), domainAddress.subnetAddress, domainAddress.subnetMask))
-                    {
-                        Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1.Equals(IPAddress.Parse(pathBegin)));
-                        IPAddress translatedAddress = foundTranslation.Item2;
-                        pathBegin = translatedAddress.ToString();
-                    }
-                    else if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
-=======
+
                     if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
->>>>>>> ca5957ef19f63ab4f097e8f8bfe2aa585f96b239
                     {
                         Random random = new Random();
                         List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
