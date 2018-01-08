@@ -40,15 +40,20 @@ namespace Subnetwork
         public List<SNPP> route(IPAddress sourceAddress, IPAddress destinationAddress)
         {
             List<SNPP> path = new List<SNPP>();
-            SNPP sourceSNPP = findSNPPbyAddress(sourceAddress);
+            List<Edge> edges = new List<Edge>();
+            List<SNPP> translated = new List<SNPP>();
+           SNPP sourceSNPP = findSNPPbyAddress(sourceAddress);
             SNPP destinationSNPP = findSNPPbyAddress(destinationAddress);
             subnetwork.algFloyda();
             SubnetworkAddress source = findSubnetworkWhereIsContained(sourceAddress);
             SubnetworkAddress destination = findSubnetworkWhereIsContained(destinationAddress);
             int sourceVertexId = subnetworkToVertexId[source];
             int destinationVertexId = subnetworkToVertexId[destination];
-            List<Edge> edges=subnetwork.getPath(sourceVertexId, destinationVertexId);
-            List<SNPP> translated=translateEdgesToSNPPs(edges);
+            if (!(sourceVertexId == destinationVertexId))
+            {
+                edges=subnetwork.getPath(sourceVertexId, destinationVertexId);
+                translated=translateEdgesToSNPPs(edges);
+            }
             return translated;
         }
 

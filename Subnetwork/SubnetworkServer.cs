@@ -90,10 +90,17 @@ namespace Subnetwork
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
             CSocket childSubSocket;
+            SubnetworkAddress address = SocketsByAddress.ElementAt(0).Key;
+            int hash = address.GetHashCode();
+            int hash2 = subnetworkAddress.GetHashCode();
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQEST, connTuple);
+            }
+            else
+            {
+                LogClass.Log("Can't find subnetwork: " + subnetworkAddress.ToString());
             }
         }
 

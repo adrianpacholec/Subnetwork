@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Subnetwork
 {
+    [Serializable]
     public class SNP
     { 
         public int Label { set; get; }
