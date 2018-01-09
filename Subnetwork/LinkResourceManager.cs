@@ -36,7 +36,7 @@ namespace Subnetwork
 
         public void LoadLinks()
         {
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " loading links in subnetwork:");
+            CustomSocket.LogClass.Log("loading links in subnetwork:");
             string fileName = Config.getProperty("subnetworkLinks");
             string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
@@ -54,7 +54,7 @@ namespace Subnetwork
                 firstNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_A_CAPACITY_POSITION]);
                 secondNodeAddress = subnetworkParams[LINK_NODE_B_POSITION];
                 secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
-                firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
+                firstSNPP = new SNPP(firstNodeAddress, firstNodeCapacity);
                 secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
                 Links.Add(new Link(firstSNPP, secondSNPP));
                 myEdgeSNPPs.Add(firstSNPP);
@@ -101,7 +101,7 @@ namespace Subnetwork
         }
 
 
-    
+
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
         // % % % % % % % % % % % % % % % % % % % % % % % % % //
@@ -149,6 +149,7 @@ namespace Subnetwork
 
             //generuje nowy label
             int potentiallyNewLabel = GimmeNewLabel();
+
             //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
             if (!SNPsbySNPPaddress.ContainsKey(pathBegin.Address))
             {
@@ -156,8 +157,9 @@ namespace Subnetwork
                 SNPsbySNPPaddress.Add(pathEnd.Address, new List<SNP>());
             }
 
-                existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
-                while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
+            //existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
+            // while (existingSNPs.Find(x => x.Label == rememberedLabel) != null) rememberedLabel = GimmeNewLabel();
+
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(potentiallyNewLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
@@ -213,7 +215,7 @@ namespace Subnetwork
 
         private int GimmeNewLabel()
         {
-            Random random = new Random();
+            Random random = new Random(Guid.NewGuid().GetHashCode());
             return random.Next(100);
         }
 

@@ -48,8 +48,8 @@ namespace Subnetwork
                 ConnectToParentSubnetwork(IPAddress.Parse(parentSubnetworkAddress), parentSubnetworkPort);
                 SendMySubnetworkInformation();
             }
-            initListeningCustomSocket();
             LoadPortsToAnotherDomains();
+            initListeningCustomSocket();
         }
 
         private static void ConnectToParentSubnetwork(IPAddress parentSubnetworkAddress, int parentSubnetworkPort)
@@ -70,7 +70,8 @@ namespace Subnetwork
             string fileName = Config.getProperty("realPortsToDomains");
             string[] loadedFile = LoadFile(fileName);
             string[] parameters = null;
-            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss")+" loaded ports to another domains");
+            LogClass.Log("loaded ports to another domains");
+ 
             foreach (string str in loadedFile)
             { 
                 if(str[0] != '#')

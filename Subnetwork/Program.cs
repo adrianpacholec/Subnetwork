@@ -18,6 +18,7 @@ namespace Subnetwork
 
         static void Main(string[] args)
         {
+            Console.Title = "Subnetwork " + CustomSocket.Config.getProperty("SubnetworkAddress");
             ConnectionController CC = new ConnectionController();
             LinkResourceManager LRM = new LinkResourceManager();
             RoutingController RC = new RoutingController(CC.ContainedSubnetworksAddresses, LRM.Links);

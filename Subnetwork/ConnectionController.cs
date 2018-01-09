@@ -64,7 +64,7 @@ namespace Subnetwork
 
         public void LoadContainedSubnetworks()
         {
-            LogClass.Log(" loading contained subnetworks.");
+            LogClass.Log("loading contained subnetworks.");
             string fileName = Config.getProperty("ContainedSubnetworks");
             string[] loadedFile = loadFile(fileName);
             string[] subnetworkParams = null;
@@ -160,7 +160,7 @@ namespace Subnetwork
 
             //dodaj SNP z labelem 0 dla konca sciezki
             SNPList.Add(new SNP(0, pathEnd, capacity, pathBegin, pathEnd));
-            LogClass.Log(" RouteTableQuery called between: " + pathBegin + "and: " + pathEnd);
+            LogClass.Log("RouteTableQuery called between: " + pathBegin + " and: " + pathEnd);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
 
             for (int index = 0; index < SNPPList.Count; index += 2)
