@@ -14,17 +14,32 @@ namespace Subnetwork
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
         private Dictionary<string, List<Tuple<string, string>>> OtherDomainSNPPAddressTranslation;
         private string SubnetworkAddress = null;
+        Router router;
 
-        public RoutingController()
+        //nie wiem czy to potrzebne, ale przekazuje to do routera wiec moze tez tu sie przyda
+        private List<SubnetworkAddress> containedSubnetworks;
+        private List<Link> links;
+        
+        internal void testRouting()
         {
+            RouteTableQuery("10.1.64.0", "10.1.196.0", 20);
+        }
+
+        public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
+        {
+            this.containedSubnetworks = containedSubnetworks;
+            this.links = links;
             SNPPList = new List<SNPP>();
+            router = new Router(containedSubnetworks, links);
+            OtherDomainSNPPAddressTranslation = new Dictionary<string, List<Tuple<string, string>>>();
+            SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
             foreach (string domainAddress in OtherDomainSNPPAddressTranslation.Keys)
             {
-                string MASKA_PODSIECI_INNEJ_DOMENY = "255.255.255.0";   //NO TO POPRAWIC
+                string MASKA_PODSIECI_INNEJ_DOMENY = "255.255.0.0";   //NO TO POPRAWIC
 
                 //sprawdza, z ktorej domeny przyszedl SNP i podmienia jego adres na adres swojego SNPP brzegowego
                 if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathBegin), IPAddress.Parse(domainAddress), IPAddress.Parse(MASKA_PODSIECI_INNEJ_DOMENY)))
@@ -46,6 +61,8 @@ namespace Subnetwork
             //1. Bierze adresy SNPP, miedzy ktorymi ma zestawić
             //2. Robi jakiegoś Djikstre, u nas Floyda bo Komando pozwolił
             //3. Zwraca wyznaczoną ścieżkę
+
+            List<SNPP> scheduled = router.route(IPAddress.Parse(pathBegin), IPAddress.Parse(pathEnd));
             return new List<SNPP>();
         }
 
@@ -75,7 +92,7 @@ namespace Subnetwork
         private void NetworkTopologyIn(SNPP localTopologyUpdate)
         {
 
-        }
+        } 
 
         private void NetworkTopologyOut(SNPP localTopologyUpdate)
         {

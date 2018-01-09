@@ -38,7 +38,7 @@ namespace Subnetwork
         {
             Vertex first = getVertex(firstVertexId, VertexList);
             Vertex second = getVertex(secondVertexId, VertexList);
-            int weight = 1 / capacity;
+            int weight = 1000000 / capacity;
             Edge created = new Edge(firstVertexId, secondVertexId, weight, first, second, false);
             EdgeList.Add(created);
         }
@@ -189,7 +189,7 @@ namespace Subnetwork
         }
         public List<Edge> getPath(int v1id, int v2id)
         {
-            addPath(v1id, v2id);
+            addPath(v1id-1, v2id-1); //bo przekazujemy index
             return getEdgeslist(v1id, v2id);          
         }
 

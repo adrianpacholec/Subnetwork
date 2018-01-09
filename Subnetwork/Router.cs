@@ -24,7 +24,10 @@ namespace Subnetwork
             subnetwork = new Network();
             subnetworkToVertexId = new Dictionary<SubnetworkAddress, int>();
             linkAndEdgeIdCorrelation = new Dictionary<Link, int>();
+            vertexIdToSubnetwork = new Dictionary<int, SubnetworkAddress>();
             TranslateSubnetworkData();
+            subnetwork.fillAdjacencyMatrix(vertexIdToSubnetwork.Count);
+            subnetwork.fillIncidenceMatrix(subnetwork.AdjacencyMatrix);
         }
 
         private void TranslateSubnetworkData()
@@ -45,8 +48,18 @@ namespace Subnetwork
             int sourceVertexId = subnetworkToVertexId[source];
             int destinationVertexId = subnetworkToVertexId[destination];
             List<Edge> edges=subnetwork.getPath(sourceVertexId, destinationVertexId);
+            List<SNPP> translated=translateEdgesToSNPPs(edges);
             return null;
             
+        }
+
+        private List<SNPP> translateEdgesToSNPPs(List<Edge> edges)
+        {
+            foreach(Edge edge in edges)
+            {
+
+            }
+            return null;
         }
 
         public void translateSubnetworksToNodes()

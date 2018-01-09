@@ -21,14 +21,14 @@ namespace Subnetwork
         public const int LINK_NODE_A_CAPACITY_POSITION = 1;
         public const int LINK_NODE_B_POSITION = 2;
         public const int LINK_NODE_B_CAPACITY_POSITION = 3;
-        private List<Link> links;
+        public List<Link> Links { get; set; }
 
 
         public LinkResourceManager()
         {
             myEdgeSNPPs = new List<SNPP>();
             rememberedLabel = GimmeNewLabel();
-            links = new List<Link>();
+            Links = new List<Link>();
             LoadLinks();
 
         }
@@ -66,6 +66,7 @@ namespace Subnetwork
 
         public void LoadLinks()
         {
+            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " loading links in subnetwork:");
             string fileName = Config.getProperty("subnetworkLinks");
             string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
@@ -85,7 +86,7 @@ namespace Subnetwork
                 secondNodeCapacity = Int32.Parse(subnetworkParams[LINK_NODE_B_CAPACITY_POSITION]);
                 firstSNPP = new Subnetwork.SNPP(firstNodeAddress, firstNodeCapacity);
                 secondSNPP = new SNPP(secondNodeAddress, secondNodeCapacity);
-                links.Add(new Link(firstSNPP, secondSNPP));
+                Links.Add(new Link(firstSNPP, secondSNPP));
                 myEdgeSNPPs.Add(firstSNPP);
                 myEdgeSNPPs.Add(secondSNPP);
                 Console.WriteLine(str);

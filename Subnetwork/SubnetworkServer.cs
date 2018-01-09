@@ -69,6 +69,7 @@ namespace Subnetwork
             string fileName = Config.getProperty("portsToDomains");
             string[] loadedFile = LoadFile(fileName);
             string[] parameters = null;
+            Console.WriteLine(DateTime.Now.ToString("HH:mm:ss")+" loaded ports to another domains");
             foreach (string str in loadedFile)
             {
                 parameters = str.Split(PARAM_SEPARATOR);
