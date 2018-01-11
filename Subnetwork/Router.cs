@@ -15,9 +15,9 @@ namespace Subnetwork
         private Dictionary<SubnetworkAddress, int> subnetworkToVertexId;
         private Dictionary<Link, int> linkAndEdgeIdCorrelation;
         private Dictionary<int, SubnetworkAddress> vertexIdToSubnetwork;
-         
 
-        public Router(List<SubnetworkAddress> subnetworks, List<Link>links)
+
+        public Router(List<SubnetworkAddress> subnetworks, List<Link> links)
         {
             this.subnetworks = subnetworks;
             this.links = links;
@@ -34,7 +34,7 @@ namespace Subnetwork
         {
             translateSubnetworksToNodes();
             translateLinksToEdges();
-           
+
         }
 
         public List<SNPP> route(IPAddress sourceAddress, IPAddress destinationAddress)
@@ -42,7 +42,7 @@ namespace Subnetwork
             List<SNPP> path = new List<SNPP>();
             List<Edge> edges = new List<Edge>();
             List<SNPP> translated = new List<SNPP>();
-           SNPP sourceSNPP = findSNPPbyAddress(sourceAddress);
+            SNPP sourceSNPP = findSNPPbyAddress(sourceAddress);
             SNPP destinationSNPP = findSNPPbyAddress(destinationAddress);
             subnetwork.algFloyda();
             SubnetworkAddress source = findSubnetworkWhereIsContained(sourceAddress);
@@ -51,8 +51,8 @@ namespace Subnetwork
             int destinationVertexId = subnetworkToVertexId[destination];
             if (!(sourceVertexId == destinationVertexId))
             {
-                edges=subnetwork.getPath(sourceVertexId, destinationVertexId);
-                translated=translateEdgesToSNPPs(edges);
+                edges = subnetwork.getPath(sourceVertexId, destinationVertexId);
+                translated = translateEdgesToSNPPs(edges);
             }
             return translated;
         }
@@ -64,10 +64,10 @@ namespace Subnetwork
             SNPP second;
             Link converted;
             List<SNPP> translated = new List<SNPP>();
-            foreach(Edge edge in edges)
+            foreach (Edge edge in edges)
             {
                 edgeId = edge.getid();
-                converted=getLinkByEdgeId(edgeId);
+                converted = getLinkByEdgeId(edgeId);
                 first = converted.FirstSNPP;
                 second = converted.SecondSNPP;
                 translated.Add(first);
@@ -78,7 +78,7 @@ namespace Subnetwork
 
         private Link getLinkByEdgeId(int edgeId)
         {
-            foreach(KeyValuePair<Link, int> entry in linkAndEdgeIdCorrelation)
+            foreach (KeyValuePair<Link, int> entry in linkAndEdgeIdCorrelation)
             {
                 if (entry.Value == edgeId)
                     return entry.Key;
@@ -128,7 +128,7 @@ namespace Subnetwork
             SNPP second = null;
             SNPP found = null;
             String toFind = address.ToString();
-            foreach(Link link in links)
+            foreach (Link link in links)
             {
                 first = link.FirstSNPP;
                 second = link.SecondSNPP;

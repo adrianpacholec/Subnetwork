@@ -24,23 +24,39 @@ namespace Subnetwork
             RoutingController RC = new RoutingController(CC.ContainedSubnetworksAddresses, LRM.Links);
             SubnetworkServer.init(CC, RC, LRM);
             loadEdgeSNPPs(CC, LRM);
-            Console.ReadLine();
+
+            string decision;
+            do
+            {
+                decision = Console.ReadLine().Trim();
+                if (decision.StartsWith("kill"))
+                {
+                    Console.WriteLine("killing spree!!!");
+                    string[] killParams = decision.Split(' ');
+                    string firstSNPaddress = killParams[1];
+                    string secondSNPaddress = killParams[2];
+                    Tuple<string,string, int> pathToReroute = LRM.DeleteLink(firstSNPaddress, secondSNPaddress);
+                    CC.ConnectionRequestFromNCC(pathToReroute.Item1, pathToReroute.Item2, pathToReroute.Item3);
+
+                }
+            }
+            while (decision != "exit");
         }
 
         private static void loadEdgeSNPPs(ConnectionController cc, LinkResourceManager lrm)
         {
             string[] loaded = LoadFile(Config.getProperty("portsToDomainsFile"));
             string[] splitedParameters;
-            foreach(string str in loaded)
+            foreach (string str in loaded)
             {
                 if (str[0] != '#')
                 {
                     splitedParameters = str.Split(' ');
-                    lrm.addEdgeSNPP(new Subnetwork.SNPP(splitedParameters[MY_SNPP_ADDRESS], Int32.Parse(splitedParameters[MY_SNPP_CAPACITY])));
+                    lrm.AddEdgeSNPP(new Subnetwork.SNPP(splitedParameters[MY_SNPP_ADDRESS], Int32.Parse(splitedParameters[MY_SNPP_CAPACITY])));
                     cc.addKeyToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]));
                 }
             }
-            foreach(string str in loaded)
+            foreach (string str in loaded)
             {
                 if (str[0] != '#')
                 {

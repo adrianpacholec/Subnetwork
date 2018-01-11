@@ -14,7 +14,6 @@ namespace Subnetwork
         private List<SNPP> myEdgeSNPPs;
 
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
-        private int rememberedLabel;
 
         public const int MASK_POSITION = 1;
         public const int LINK_NODE_A_POSITION = 0;
@@ -27,7 +26,6 @@ namespace Subnetwork
         public LinkResourceManager()
         {
             myEdgeSNPPs = new List<SNPP>();
-            rememberedLabel = GimmeNewLabel();
             Links = new List<Link>();
             LoadLinks();
             SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
@@ -63,7 +61,29 @@ namespace Subnetwork
             }
         }
 
-        public void addEdgeSNPP(SNPP snpp)
+        public Tuple<string, string, int> DeleteLink(string firstSNPaddress, string secondSNPaddress)
+        {
+            Tuple<string, string, int> addresses = RemoveFromDict(firstSNPaddress);
+            RemoveFromDict(secondSNPaddress);
+            return addresses;
+
+        }
+
+        private Tuple<string, string, int> RemoveFromDict(string address)
+        {
+            List<SNP> list = SNPsbySNPPaddress[address];
+            Tuple<string, string, int> addresses = null;
+            foreach (SNP snp in list)
+            {
+                SubnetworkServer.SendTopologyUpdateToRC(true, snp);
+                addresses = new Tuple<string, string, int>(snp.PathBegin, snp.PathEnd, snp.OccupiedCapacity);
+
+            }
+            SNPsbySNPPaddress.Remove(address);
+            return addresses;
+        }
+
+        public void AddEdgeSNPP(SNPP snpp)
         {
             myEdgeSNPPs.Add(snpp);
         }
@@ -211,7 +231,6 @@ namespace Subnetwork
             SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, pathEnd);
             return SNPpair;
         }
-
 
         private int GimmeNewLabel()
         {

@@ -13,12 +13,9 @@ namespace Subnetwork
         private List<SNPP> SNPPList;
         private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
         Router router;
-
         private List<SubnetworkAddress> containedSubnetworks;
         private List<Link> links;
-        
-    
-
+                      
         public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
         {
             this.containedSubnetworks = containedSubnetworks;
