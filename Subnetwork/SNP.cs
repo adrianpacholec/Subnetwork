@@ -14,6 +14,7 @@ namespace Subnetwork
         public int OccupiedCapacity { get; set; }
         public string PathBegin { get; set; }
         public string PathEnd { get; set; }
+        public bool Deleting { get; set; }
 
         public SNP(int label, string address, int capacity)
         {
@@ -22,6 +23,7 @@ namespace Subnetwork
             OccupiedCapacity = capacity;
             PathBegin = null;
             PathEnd = null;
+            Deleting = false;
         }
 
         public SNP(int label, string address, int capacity, string pathBegin, string pathEnd)
@@ -31,7 +33,7 @@ namespace Subnetwork
             OccupiedCapacity = capacity;
             PathBegin = pathBegin;
             PathEnd = pathEnd;
+            Deleting = false;
         }
-
     }
 }

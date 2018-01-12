@@ -71,10 +71,10 @@ namespace Subnetwork
             string[] loadedFile = LoadFile(fileName);
             string[] parameters = null;
             LogClass.Log("loaded ports to another domains");
- 
+
             foreach (string str in loadedFile)
-            { 
-                if(str[0] != '#')
+            {
+                if (str[0] != '#')
                 {
                     parameters = str.Split(PARAM_SEPARATOR);
                     SocketsToAnotherDomains.Add(new SubnetworkAddress(parameters[SUBNETWORK_ADDRESS_POSITION], parameters[SUBNETWORK_MASK_POSITION]), Int32.Parse(parameters[PORT_POSITION]));
@@ -111,14 +111,14 @@ namespace Subnetwork
 
             Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
             CSocket otherDomainSocket = GetSocketToDomain(AddressPathEnd);
-            otherDomainSocket.SendObject(PEER_COORDINATION,peerTuple);
-            object zrobictuzebyodbieraltruealbofalse=otherDomainSocket.ReceiveObject();
+            otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
+            object zrobictuzebyodbieraltruealbofalse = otherDomainSocket.ReceiveObject();
             otherDomainSocket.Close();
         }
 
         public static Tuple<SNP, SNP> callLinkConnectionRequestInLRM(SNPP connectionBegin, SNPP connectionEnd, int capacity)
         {
-            Tuple<SNP, SNP> SNPpair=linkResourceManager.SNPLinkConnectionRequest(connectionBegin, connectionEnd, capacity);
+            Tuple<SNP, SNP> SNPpair = linkResourceManager.SNPLinkConnectionRequest(connectionBegin, connectionEnd, capacity);
             return SNPpair;
         }
 
@@ -130,7 +130,7 @@ namespace Subnetwork
         public static CSocket GetSocketToDomain(string address)
         {
             IPAddress ipAddress = IPAddress.Parse(address);
-            SubnetworkAddress found= null;
+            SubnetworkAddress found = null;
             foreach (SubnetworkAddress domainAddress in SocketsByAddress.Keys)
             {
                 if (IPAddressExtensions.IsInSameSubnet(ipAddress, domainAddress.subnetAddress, domainAddress.subnetMask))
@@ -141,7 +141,7 @@ namespace Subnetwork
 
         public static CSocket createSocketToOtherDomain(SubnetworkAddress address)
         {
-            int port=SocketsToAnotherDomains[address];
+            int port = SocketsToAnotherDomains[address];
             CSocket socket = new CSocket(IPAddress.Parse("localhost"), port, CSocket.CONNECT_FUNCTION);
             return socket;
         }
@@ -204,7 +204,7 @@ namespace Subnetwork
 
         private static void waitForInput(CSocket connected)
         {
-            if(!connected.Equals(toParentSocket))
+            if (!connected.Equals(toParentSocket))
                 ProcessConnectInformations(connected);
             while (true)
             {
@@ -237,11 +237,11 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(CONNECTION_REQEST_FROM_CC))
                 {
-                    Tuple<SNP, SNP> pathToAssign = (Tuple<SNP,SNP>)received.Item2;
+                    Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
                     SNP first = pathToAssign.Item1;
                     SNP second = pathToAssign.Item2;
-                    LogClass.Log("Received CONNECTION REQUEST to set connection between "+ first.Address+" and " + second.Address);
-                    bool response=callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
+                    LogClass.Log("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
+                    bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
 
                 }
             }
@@ -271,9 +271,14 @@ namespace Subnetwork
                 routingController.AddSNPP(receivedList.ElementAt(i));
         }
 
-            public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
+        public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
         {
             // Maciek zrób tu co chcesz xD
+        }
+
+        internal static void SendDeleteConnectionRequest(string pathBeginAddress, string pathEndAddress, SubnetworkAddress subnetAddress)
+        {
+            throw new NotImplementedException();
         }
     }
 }
