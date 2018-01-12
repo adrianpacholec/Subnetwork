@@ -160,66 +160,83 @@ namespace Subnetwork
                 }
             }
 
-            //dodaj SNP z labelem 0 dla konca sciezki
-            SNPList.Add(new SNP(0, pathEnd, capacity, pathBegin, pathEnd));
             LogClass.Log("RouteTableQuery called between: " + pathBegin + " and: " + pathEnd);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
-
-            for (int index = 0; index < SNPPList.Count; index += 2)
+            if (SNPPList.Count > 0)
             {
-                SNPP SNPPpathBegin = SNPPList[index];
-                SNPP SNPPpathEnd = SNPPList[index + 1];
-                Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd, capacity);
-                SNPList.Add(SNPpair.Item1);
-                SNPList.Add(SNPpair.Item2);
-            }
-
-            //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
-            existingConnections.Add(new string[] { pathBegin, pathEnd }, SNPList);
-
-            //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
-
-            for (int index = 0; index < SNPList.Count - 1; index++)
-            {
-                SNP SNPpathBegin = SNPList[index];
-                for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
-                {
-                    SNP SNPpathEnd = SNPList[jndex];
-
-                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
-                    {
-                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
-                        {
-                            LogClass.Log("Subnetwork Connection set properly.");
-                        }
-                        else
-                        {
-                            LogClass.Log("Epic fail.");
-                            return false;
-                        }
-                    }
-                }
-
-            }
-
-            //Wyslanie PeerCoordination jezeli zestawiane polaczenie przebiega przez 2 domeny
-
-            if (PathEndAddressFromDifferentDomain != null)
-            {
-                //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
-                SNP lastSNPinThisDomain = SNPList.Last();
-
-                if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
-                {
-                    LogClass.Log("PeerCoordination OK.");
-                }
+                //dodaj SNP z labelem 0 dla konca sciezki
+                if (PathEndAddressFromDifferentDomain == null)
+                    SNPList.Add(new SNP(0, pathEnd, capacity, pathBegin, pathEnd));
                 else
                 {
-                    LogClass.Log("PeerCoordination FAIL.");
-                };
-            }
+                    SNPP fakeSNPP = new SNPP(pathEnd, 0);
+                    SNPPList.Add(fakeSNPP);
+                    SNPPList.Add(fakeSNPP);
+                }
 
-            return true;  //Jesli polaczenie zestawiono poprawnie
+                for (int index = 0; index < SNPPList.Count; index += 2)
+                {
+                    SNPP SNPPpathBegin = SNPPList[index];
+                    SNPP SNPPpathEnd = SNPPList[index + 1];
+                    Tuple<SNP, SNP> SNPpair = LinkConnectionRequest(SNPPpathBegin, SNPPpathEnd, capacity);
+                    if (SNPpair.Item1 != SNPpair.Item2)
+                    {
+                        SNPList.Add(SNPpair.Item1);
+                        SNPList.Add(SNPpair.Item2);
+                    }
+                    else
+                        SNPList.Add(SNPpair.Item1);
+                }
+
+                //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
+                existingConnections.Add(new string[] { pathBegin, pathEnd }, SNPList);
+
+                //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
+
+                for (int index = 0; index < SNPList.Count - 1; index++)
+                {
+                    SNP SNPpathBegin = SNPList[index];
+                    for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
+                    {
+                        SNP SNPpathEnd = SNPList[jndex];
+
+                        if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
+                        {
+                            if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                            {
+                                LogClass.Log("Subnetwork Connection set properly.");
+                            }
+                            else
+                            {
+                                LogClass.Log("Epic fail.");
+                                return false;
+                            }
+                        }
+                    }
+
+                }
+
+                //Wyslanie PeerCoordination jezeli zestawiane polaczenie przebiega przez 2 domeny
+
+                if (PathEndAddressFromDifferentDomain != null)
+                {
+                    //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
+                    SNP lastSNPinThisDomain = SNPList.Last();
+
+                    if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                    {
+                        LogClass.Log("PeerCoordination OK.");
+                    }
+                    else
+                    {
+                        LogClass.Log("PeerCoordination FAIL.");
+                    };
+                }
+            }
+            if (SNPPList.Count > 0)
+                return true;  //Jesli polaczenie zestawiono poprawnie
+            else
+                return false;
         }
 
         public bool DeleteConnection(string pathBegin, string pathEnd)
@@ -349,8 +366,7 @@ namespace Subnetwork
                 }
             }
             SubnetworkAddress subnetAddress = new SubnetworkAddress(subnetworkAddress.ToString(), subnetworkAddressMask.ToString());
-            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetAddress);
-            return true;
+            return SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetAddress);
         }
 
         public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)

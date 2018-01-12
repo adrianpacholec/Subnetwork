@@ -273,7 +273,7 @@ namespace Subnetwork
 
             public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
         {
-            // Maciek zrób tu co chcesz xD
+            // Tomek zrób tu co chcesz xD
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Subnetwork
             Vertex first = getVertex(firstVertexId, VertexList);
             Vertex second = getVertex(secondVertexId, VertexList);
             int weight = 1000000 / capacity;
-            Edge created = new Edge(firstVertexId, secondVertexId, weight, first, second, false);
+            Edge created = new Edge(firstVertexId, secondVertexId, weight,capacity, first, second, false);
             EdgeList.Add(created);
         }
 
@@ -75,6 +75,13 @@ namespace Subnetwork
                 flag = false;
             }
             endAlgPrima(this, mstMatrix);        
+        }
+
+        internal void removeLinksWithLowerCapacity(int capacity)
+        {
+            for (int i = EdgeList.Count - 1; i >= 0; i--)
+                if (EdgeList.ElementAt(i).capacity < capacity)
+                    EdgeList.RemoveAt(i);
         }
 
         public void algFloyda()
@@ -136,20 +143,29 @@ namespace Subnetwork
 
         public void createStringBasedPath(string path)  //dodaje sciezke do listy scieżek na podstawie stringa z ciągiem wierzchołków
         {
-            int b = 0;
-            string[] nbsVertices= path.Split(' ');
-            PathList.Add(new Path(Int32.Parse(nbsVertices[0])+1, Int32.Parse(nbsVertices[nbsVertices.GetLength(0)-1])+1));
-            for (int a=0; a<nbsVertices.GetLength(0)-1; a++)
+            if (!String.IsNullOrEmpty(path))
             {
-                b = a + 1;
-                PathList[PathList.Count - 1].edgesInPath.Add(getEdge(Int32.Parse(nbsVertices[a])+1, Int32.Parse(nbsVertices[b])+1, EdgeList));
+                int b = 0;
+                string[] nbsVertices= path.Split(' ');
+                PathList.Add(new Path(Int32.Parse(nbsVertices[0])+1, Int32.Parse(nbsVertices[nbsVertices.GetLength(0)-1])+1));
+                for (int a=0; a<nbsVertices.GetLength(0)-1; a++)
+                {
+                    b = a + 1;
+                    PathList[PathList.Count - 1].edgesInPath.Add(getEdge(Int32.Parse(nbsVertices[a])+1, Int32.Parse(nbsVertices[b])+1, EdgeList));
 
+                }
             }
         }
 
         public string getPathFromIncidenceMatrix(string path,int indexfirstvertex, int indexsecondvertex) //uzupełnienie metody getIndexOfPreviousVertex ktora dodaje ostatni wierzchołek
         {
-            return indexsecondvertex + " " + getIndexOfPreviousVertex(path, indexfirstvertex, indexsecondvertex);
+            try
+            {
+                return indexsecondvertex + " " + getIndexOfPreviousVertex(path, indexfirstvertex, indexsecondvertex);
+            }catch(IndexOutOfRangeException e)
+            {
+                return "";
+            }
         }
 
         public int getNbEndVertexOfLightestEdge(int vertexindex, bool[]isvisited) //zwraca numer wierzchołka do którego koszt dojścia jest najmniejszy i jest jeszcze nieodwiedzony (jeśli nie ma takiego zwraca -1)
