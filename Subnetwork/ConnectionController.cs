@@ -207,7 +207,21 @@ namespace Subnetwork
             if (PathEndAddressFromDifferentDomain != null)
             {
                 //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
-                SNP lastSNPinThisDomain = SNPList.Last();
+                SNP lastSNPinThisDomain = null;
+                foreach (SNP snp in SNPList)
+                {
+                    foreach (List<Tuple<IPAddress, IPAddress>> list in OtherDomainSNPPAddressTranslation.Values)
+                    {
+                        foreach (Tuple<IPAddress, IPAddress> tuple in list)
+                        {
+                            if (tuple.Item1.ToString() == snp.Address)
+                            {
+                                lastSNPinThisDomain = snp;
+                            }
+                        }                           
+                    }
+                }
+                         
 
                 if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
@@ -239,7 +253,7 @@ namespace Subnetwork
 
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
                             LogClass.Log("Subnetwork Connection set properly.");
                         }
@@ -269,12 +283,13 @@ namespace Subnetwork
                 {
                     LogClass.Log("PeerCoordination FAIL.");
                 };
-
-
-
             }
-
             return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+              
+        public bool DeleteConnectionRequestOut(SNP sNPpathBegin, SNP sNPpathEnd)
+        {
+            throw new NotImplementedException();
         }
 
         public bool ConnectionRequestFromCC(SNP pathBegin, SNP pathEnd)
