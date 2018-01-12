@@ -28,7 +28,7 @@ namespace Subnetwork
 
         public List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
-            List<SNPP> scheduled = router.route(pathBegin, pathEnd);
+            List<SNPP> scheduled = router.route(pathBegin, pathEnd, capacity);
             return scheduled;
         }
 
