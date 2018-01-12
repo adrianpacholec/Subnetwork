@@ -391,9 +391,51 @@ namespace Subnetwork
             return SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetAddress);
         }
 
+        public bool DeletePeerCoordinationIn(SNP pathBegin, string pathEnd)
+        {
+            List<SNP> SNPList = existingConnections[new string[] { pathBegin.Address, pathEnd }];
+
+            //w kazdym SNP ustaw "deleting" na true
+            SNPList.ForEach(x => x.Deleting = true);
+
+            //usuniecie alokacji w LRM
+            for (int index = 0; index < SNPList.Count; index += 2)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+                DeleteLinkConnectionRequest(SNPpathBegin, SNPpathEnd);
+            }
+
+            //Wysłanie DeleteConnectionRequesta do podsieci, jeżeli na liscie SNP znajdą się 2 adresy brzegowe tej podsieci
+
+            for (int index = 0; index < SNPList.Count - 1; index++)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
+                {
+                    SNP SNPpathEnd = SNPList[jndex];
+                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
+                    {
+                        if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        {
+                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd + " successful.");
+                        }
+                        else
+                        {
+                            LogClass.Log("Epic fail xD");
+                            return false;
+                        }
+                    }
+                }
+            }
+
+
+            return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+
         public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)
         {
-
+            string beginAddressForDict = pathBegin.Address;
             //Lista SNP dla tworzonego aktualnie polaczenia
             List<SNP> SNPList = new List<SNP>();
 
@@ -412,6 +454,9 @@ namespace Subnetwork
 
             SNPList.Add(new SNP(pathBegin.Label, pathBegin.Address, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
             SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
+
+            //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
+            existingConnections.Add(new string[] { beginAddressForDict, pathEnd }, SNPList);
 
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
 

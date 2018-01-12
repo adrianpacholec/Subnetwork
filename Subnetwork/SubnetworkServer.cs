@@ -265,6 +265,12 @@ namespace Subnetwork
                     connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     LogClass.Log("Received PEER COORDINATION from AS_1");
                 }
+                else if (parameter.Equals(DELETE_PEER_COORDINATION))
+                {
+                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
+                    connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                    LogClass.Log("Received DELETE PEER COORDINATION from AS_1");
+                }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
 
