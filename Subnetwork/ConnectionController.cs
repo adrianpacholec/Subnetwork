@@ -42,19 +42,19 @@ namespace Subnetwork
             LoadContainedSubnetworks();
         }
 
-        public void addKeyToDictionary(SubnetworkAddress key)
+        public void AddKeyToDictionary(SubnetworkAddress key)
         {
             if (!OtherDomainSNPPAddressTranslation.ContainsKey(key))
                 OtherDomainSNPPAddressTranslation.Add(key, new List<Tuple<IPAddress, IPAddress>>());
         }
 
-        public void addValueToDictionary(SubnetworkAddress key, Tuple<IPAddress, IPAddress> value)
+        public void AddValueToDictionary(SubnetworkAddress key, Tuple<IPAddress, IPAddress> value)
         {
-            List<Tuple<IPAddress, IPAddress>> list = getFromDictionary(key);
+            List<Tuple<IPAddress, IPAddress>> list = GetFromDictionary(key);
             list.Add(value);
         }
 
-        public List<Tuple<IPAddress, IPAddress>> getFromDictionary(SubnetworkAddress address)
+        public List<Tuple<IPAddress, IPAddress>> GetFromDictionary(SubnetworkAddress address)
         {
             foreach (KeyValuePair<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> entry in OtherDomainSNPPAddressTranslation)
             {
@@ -68,7 +68,7 @@ namespace Subnetwork
         {
             LogClass.Log("loading contained subnetworks.");
             string fileName = Config.getProperty("ContainedSubnetworks");
-            string[] loadedFile = loadFile(fileName);
+            string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
             foreach (string str in loadedFile)
             {
@@ -78,7 +78,7 @@ namespace Subnetwork
             }
         }
 
-        private string[] loadFile(String fileName)
+        private string[] LoadFile(String fileName)
         {
             string[] fileLines = System.IO.File.ReadAllLines(fileName);
             return fileLines;
@@ -97,19 +97,16 @@ namespace Subnetwork
             return SNPpair;
         }
 
-        private Tuple<SNP, SNP> LinkConnectionRequest(SNP connectionBegin, SNPP connectionEnd)
+        private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
         {
-            //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            Tuple<SNP, SNP> SNPpair = null;
-            return SNPpair;
+            throw new NotImplementedException();
         }
 
-        private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNP connectionEnd)
+        private void DeleteLinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
         {
-            //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            Tuple<SNP, SNP> SNPpair = null;
-            return SNPpair;
+            SubnetworkServer.CallDeleteLinkConnectionRequestInLRM(SNPpathBegin, SNPpathEnd, 0);
         }
+
 
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
@@ -204,10 +201,10 @@ namespace Subnetwork
                             {
                                 lastSNPinThisDomain = snp;
                             }
-                        }                           
+                        }
                     }
                 }
-                         
+
 
                 if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
@@ -226,10 +223,12 @@ namespace Subnetwork
         {
             List<SNP> SNPList = existingConnections[new string[] { pathBegin, pathEnd }];
 
-            SNPList.ForEach(i => i.Deleting = true);
+            //w kazdym SNP ustaw "deleting" na true
+            SNPList.ForEach(x => x.Deleting = true);
 
             string PathEndAddressFromDifferentDomain = null;
 
+            //usuniecie alokacji w LRM
             for (int index = 0; index < SNPList.Count; index += 2)
             {
                 SNP SNPpathBegin = SNPList[index];
@@ -237,7 +236,7 @@ namespace Subnetwork
                 DeleteLinkConnectionRequest(SNPpathBegin, SNPpathEnd);
             }
 
-            //Wysłanie DeleteConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
+            //Wysłanie DeleteConnectionRequesta do podsieci, jeżeli na liscie SNP znajdą się 2 adresy brzegowe tej podsieci
 
             for (int index = 0; index < SNPList.Count - 1; index++)
             {
@@ -245,22 +244,21 @@ namespace Subnetwork
                 for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
                     SNP SNPpathEnd = SNPList[jndex];
-
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
                         if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
-                            LogClass.Log("Subnetwork Connection set properly.");
+                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd + " successful.");
                         }
                         else
                         {
-                            LogClass.Log("Epic fail.");
+                            LogClass.Log("Epic fail xD");
                             return false;
                         }
                     }
                 }
             }
-        
+
             //sprawdzamy, czy adres koncowy jest w naszej domenie
             if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), IPAddress.Parse(SubnetworkAddress), IPAddress.Parse(SubnetworkMask)))
             {
@@ -282,11 +280,9 @@ namespace Subnetwork
                     }
                 }
 
-                //ta metode tez trzeba podmienic
-
                 if (DeletePeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
                 {
-                    LogClass.Log("PeerCoordination OK.");
+                    LogClass.Log("DeletePeerCoordination OK.");
                 }
                 else
                 {
@@ -294,16 +290,6 @@ namespace Subnetwork
                 };
             }
             return true;  //Jesli polaczenie zestawiono poprawnie
-        }
-
-        private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void DeleteLinkConnectionRequest(SNP sNPpathBegin, SNP sNPpathEnd)
-        {
-            throw new NotImplementedException();
         }
 
         public bool DeleteConnectionRequestOut(SNP pathBegin, SNP pathEnd)

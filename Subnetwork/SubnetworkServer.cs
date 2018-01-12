@@ -103,6 +103,11 @@ namespace Subnetwork
             }
         }
 
+        public static void CallDeleteLinkConnectionRequestInLRM(SNP SNPpathBegin, SNP SNPpathEnd, int capacity)
+        {
+            linkResourceManager.SNPLinkConnectionRequest(SNPpathBegin, SNPpathEnd, capacity);
+        }
+
         public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd)
         {
             //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
