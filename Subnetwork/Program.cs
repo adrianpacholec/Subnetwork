@@ -35,8 +35,8 @@ namespace Subnetwork
                     string[] killParams = decision.Split(' ');
                     string firstSNPaddress = killParams[1];
                     string secondSNPaddress = killParams[2];
-                    Tuple<string,string, int> pathToReroute = LRM.DeleteLink(firstSNPaddress, secondSNPaddress);
-                    CC.ConnectionRequestFromNCC(pathToReroute.Item1, pathToReroute.Item2, pathToReroute.Item3);
+               //         Tuple<string,string, int> pathToReroute = LRM.DeleteLink(firstSNPaddress, secondSNPaddress);
+               //         CC.ConnectionRequestFromNCC(pathToReroute.Item1, pathToReroute.Item2, pathToReroute.Item3);
 
                 }
             }
@@ -52,7 +52,7 @@ namespace Subnetwork
                 if (str[0] != '#')
                 {
                     splitedParameters = str.Split(' ');
-                    lrm.AddEdgeSNPP(new Subnetwork.SNPP(splitedParameters[MY_SNPP_ADDRESS], Int32.Parse(splitedParameters[MY_SNPP_CAPACITY])));
+                    lrm.AddEdgeSNPP(new SNPP(splitedParameters[MY_SNPP_ADDRESS], Int32.Parse(splitedParameters[MY_SNPP_CAPACITY])));
                     cc.AddKeyToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]));
                 }
             }

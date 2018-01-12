@@ -11,19 +11,16 @@ namespace Subnetwork
     class RoutingController
     {
         private List<SNPP> SNPPList;
-        private Dictionary<string, List<SNP>> SNPsbySNPPaddress;
         Router router;
         private List<SubnetworkAddress> containedSubnetworks;
         private List<Link> links;
-                      
+
         public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
         {
             this.containedSubnetworks = containedSubnetworks;
             this.links = links;
             SNPPList = new List<SNPP>();
             router = new Router(containedSubnetworks, links);
-          
-            SNPsbySNPPaddress = new Dictionary<string, List<SNP>>();
         }
 
         public List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
@@ -34,23 +31,21 @@ namespace Subnetwork
 
         public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
-
-            List<SNP> existingSNPs = SNPsbySNPPaddress[localTopologyUpdate.Address];
-            //sprawdz czy istnieje taki SNP
-            while (existingSNPs.Find(x => x.Label == localTopologyUpdate.Label) != null)
+            Link link = links.Find(x => (x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address==localTopologyUpdate.Address));
+            SNPP snpp = null;
+            if (link.FirstSNPP.Address == localTopologyUpdate.Address)
+                snpp = link.FirstSNPP;
+            else
+                snpp = link.SecondSNPP;
+            if (delete)
             {
-                // jeśli TRUE to usuwamy z List<SNP>, jeśli FALSE to dodajemy
-                if (delete)
-                {
-                    existingSNPs.Remove(localTopologyUpdate);
-                    LogClass.Log("Remove " + localTopologyUpdate + " from local topology");
-                }
-                else
-                {
-                    existingSNPs.Add(localTopologyUpdate);
-                    LogClass.Log("Add " + localTopologyUpdate + " to local topology");
-                }
-
+                snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
+                LogClass.Log("Removed " + localTopologyUpdate.Address + ".");
+            }
+            else
+            {
+                snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
+                LogClass.Log("Added " + localTopologyUpdate.Address + ".");
             }
         }
 
@@ -58,7 +53,7 @@ namespace Subnetwork
         private void NetworkTopologyIn(SNPP localTopologyUpdate)
         {
 
-        } 
+        }
 
         private void NetworkTopologyOut(SNPP localTopologyUpdate)
         {
