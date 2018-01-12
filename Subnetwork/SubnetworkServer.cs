@@ -20,6 +20,7 @@ namespace Subnetwork
         public const String OPERATED_SUBNETWORK_MASK = "operatedSubnetworkMask";
         public const String CONNECTION_REQUEST_FROM_CC = "connectionRequest";
         public const String DELETE_CONNECTION_REQUEST = "deleteRequest";
+        public const String DELETE_PEER_COORDINATION = "deletePeerCoordination";
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -119,7 +120,7 @@ namespace Subnetwork
             }
         }
 
-        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd)
+        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd, bool val)
         {
             //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
             //jak serwer podsieci w tej domenie i zostanie zapamiętany jego socket w słowniku.
@@ -127,7 +128,10 @@ namespace Subnetwork
 
             Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
             CSocket otherDomainSocket = GetSocketToDomain(AddressPathEnd);
-            otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
+            if (val)
+                otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
+            else
+                otherDomainSocket.SendObject(DELETE_PEER_COORDINATION, peerTuple);
             object zrobictuzebyodbieraltruealbofalse = otherDomainSocket.ReceiveObject();
             otherDomainSocket.Close();
         }
@@ -265,7 +269,7 @@ namespace Subnetwork
                     Tuple<string, string> pathToDelete = (Tuple<string, string>)received.Item2;
                     string pathBegin = pathToDelete.Item1;
                     string pathEnd = pathToDelete.Item2;
-                    LogClass.Log("Receivef DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
+                    LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
                     connectionController.DeleteConnection(pathBegin, pathEnd); 
                 }
             }
