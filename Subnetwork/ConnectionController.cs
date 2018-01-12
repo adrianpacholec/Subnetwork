@@ -97,11 +97,6 @@ namespace Subnetwork
             return SNPpair;
         }
 
-        private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
-        {
-            throw new NotImplementedException();
-        }
-
         private void DeleteLinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
         {
             SubnetworkServer.CallDeleteLinkConnectionRequestInLRM(SNPpathBegin, SNPpathEnd, 0);
@@ -452,9 +447,14 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
-            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd);
+            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
             return true;
         }
 
+        private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
+        {
+            SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
+            return true;
+        }
     }
 }

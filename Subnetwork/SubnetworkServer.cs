@@ -18,7 +18,9 @@ namespace Subnetwork
         public const String NETWORK_TOPOLOGY = "networkTopology";
         public const String OPERATED_SUBNETWORK = "operatedSubnetwork";
         public const String OPERATED_SUBNETWORK_MASK = "operatedSubnetworkMask";
-        public const String CONNECTION_REQEST_FROM_CC = "connectionRequest";
+        public const String CONNECTION_REQUEST_FROM_CC = "connectionRequest";
+        public const String DELETE_CONNECTION_REQUEST = "deleteRequest";
+        public const String DELETE_PEER_COORDINATION = "deletePeerCoordination";
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -49,7 +51,7 @@ namespace Subnetwork
                 SendMySubnetworkInformation();
             }
             LoadPortsToAnotherDomains();
-            initListeningCustomSocket();
+            InitListeningCustomSocket();
         }
 
         private static void ConnectToParentSubnetwork(IPAddress parentSubnetworkAddress, int parentSubnetworkPort)
@@ -59,9 +61,9 @@ namespace Subnetwork
 
         private static void SendMySubnetworkInformation()
         {
-            object toSend = getSubnetworkInformation();
+            object toSend = GetSubnetworkInformation();
             toParentSocket.SendObject(OPERATED_SUBNETWORK, toSend);
-            waitForInputFromSocketInAnotherThread(toParentSocket);
+            WaitForInputFromSocketInAnotherThread(toParentSocket);
 
         }
 
@@ -95,7 +97,7 @@ namespace Subnetwork
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
-                childSubSocket.SendObject(CONNECTION_REQEST_FROM_CC, connTuple);
+                childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
             }
             else
             {
@@ -108,7 +110,23 @@ namespace Subnetwork
             linkResourceManager.SNPLinkConnectionRequest(SNPpathBegin, SNPpathEnd, capacity);
         }
 
-        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd)
+        public static void SendDeleteConnectionRequest(string pathBeginAddress, string pathEndAddress, SubnetworkAddress subnetAddress)
+        {
+            Tuple<string, string> deleteTuple = new Tuple<string, string>(pathBeginAddress, pathEndAddress);
+            CSocket childSubSocket;
+            bool hasValue = SocketsByAddress.TryGetValue(subnetAddress, out childSubSocket);
+            if (hasValue)
+            {
+                childSubSocket.SendObject(DELETE_CONNECTION_REQUEST, deleteTuple);
+            }
+            else
+            {
+                LogClass.Log("Can't find subnetwork: " + subnetAddress.ToString());
+            }
+        }
+
+        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd, bool val)
+
         {
             //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
             //jak serwer podsieci w tej domenie i zostanie zapamiętany jego socket w słowniku.
@@ -116,7 +134,10 @@ namespace Subnetwork
 
             Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
             CSocket otherDomainSocket = GetSocketToDomain(AddressPathEnd);
-            otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
+            if (val)
+                otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
+            else
+                otherDomainSocket.SendObject(DELETE_PEER_COORDINATION, peerTuple);
             object zrobictuzebyodbieraltruealbofalse = otherDomainSocket.ReceiveObject();
             otherDomainSocket.Close();
         }
@@ -156,7 +177,7 @@ namespace Subnetwork
             return routingController.RouteTableQuery(IPAddress.Parse(pathBegin), IPAddress.Parse(pathEnd), capacity);
         }
 
-        private static object getSubnetworkInformation()
+        private static object GetSubnetworkInformation()
         {
             Dictionary<string, string> mySubnetworkInformation = new Dictionary<string, string>();
             string mySubnetworkAddress = Config.getProperty(OPERATED_SUBNETWORK);
@@ -167,7 +188,7 @@ namespace Subnetwork
             return mySubnetworkInformation;
         }
 
-        public static void initListeningCustomSocket()
+        public static void InitListeningCustomSocket()
         {
             IPAddress parentSubnetworkAddress = IPAddress.Parse("127.0.0.1");
             int port = Config.getIntegerProperty("ListeningPort");
@@ -178,10 +199,10 @@ namespace Subnetwork
 
         public static void ListenForConnections()
         {
-            initListenThread();
+            InitListenThread();
         }
 
-        private static Thread initListenThread()
+        private static Thread InitListenThread()
         {
             LogClass.Log("Listening for subnetwork connections");
             var t = new Thread(() => RealStart());
@@ -196,18 +217,18 @@ namespace Subnetwork
             {
                 CSocket connected = listeningSocket.Accept();
                 LogClass.Log("Connected.");
-                waitForInputFromSocketInAnotherThread(connected);
+                WaitForInputFromSocketInAnotherThread(connected);
             }
 
         }
 
-        private static void waitForInputFromSocketInAnotherThread(CSocket connected)
+        private static void WaitForInputFromSocketInAnotherThread(CSocket connected)
         {
-            var t = new Thread(() => waitForInput(connected));
+            var t = new Thread(() => WaitForInput(connected));
             t.Start();
         }
 
-        private static void waitForInput(CSocket connected)
+        private static void WaitForInput(CSocket connected)
         {
             if (!connected.Equals(toParentSocket))
                 ProcessConnectInformations(connected);
@@ -218,7 +239,7 @@ namespace Subnetwork
                 Object receivedObject = received.Item2;
                 if (parameter.Equals(SNPP_SUBNETWORK_INFORMATION))
                 {
-                    insertSNPPSToRC((List<SNPP>)receivedObject);
+                    InsertSNPPSToRC((List<SNPP>)receivedObject);
                 }
                 else if (parameter.Equals(CONNECTION_REQUEST_FROM_NCC))
                 {
@@ -240,7 +261,7 @@ namespace Subnetwork
                 {
 
                 }
-                else if (parameter.Equals(CONNECTION_REQEST_FROM_CC))
+                else if (parameter.Equals(CONNECTION_REQUEST_FROM_CC))
                 {
                     Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
                     SNP first = pathToAssign.Item1;
@@ -248,6 +269,14 @@ namespace Subnetwork
                     LogClass.Log("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
                     bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
 
+                }
+                else if(parameter.Equals(DELETE_CONNECTION_REQUEST))
+                {
+                    Tuple<string, string> pathToDelete = (Tuple<string, string>)received.Item2;
+                    string pathBegin = pathToDelete.Item1;
+                    string pathEnd = pathToDelete.Item2;
+                    LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
+                    connectionController.DeleteConnection(pathBegin, pathEnd); 
                 }
             }
         }
@@ -270,7 +299,7 @@ namespace Subnetwork
             }
         }
 
-        private static void insertSNPPSToRC(List<SNPP> receivedList)
+        private static void InsertSNPPSToRC(List<SNPP> receivedList)
         {
             for (int i = 0; i < receivedList.Count; i++)
                 routingController.AddSNPP(receivedList.ElementAt(i));
@@ -281,9 +310,5 @@ namespace Subnetwork
             // Maciek zrób tu co chcesz xD
         }
 
-        internal static void SendDeleteConnectionRequest(string pathBeginAddress, string pathEndAddress, SubnetworkAddress subnetAddress)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
