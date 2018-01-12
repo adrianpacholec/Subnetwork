@@ -66,7 +66,6 @@ namespace Subnetwork
             Tuple<string, string, int> addresses = RemoveFromDict(firstSNPaddress);
             RemoveFromDict(secondSNPaddress);
             return addresses;
-
         }
 
         private Tuple<string, string, int> RemoveFromDict(string address)

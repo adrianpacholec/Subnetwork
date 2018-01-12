@@ -18,7 +18,8 @@ namespace Subnetwork
         public const String NETWORK_TOPOLOGY = "networkTopology";
         public const String OPERATED_SUBNETWORK = "operatedSubnetwork";
         public const String OPERATED_SUBNETWORK_MASK = "operatedSubnetworkMask";
-        public const String CONNECTION_REQEST_FROM_CC = "connectionRequest";
+        public const String CONNECTION_REQUEST_FROM_CC = "connectionRequest";
+        public const String DELETE_CONNECTION_REQUEST = "deleteRequest";
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -95,11 +96,26 @@ namespace Subnetwork
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
-                childSubSocket.SendObject(CONNECTION_REQEST_FROM_CC, connTuple);
+                childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
             }
             else
             {
                 LogClass.Log("Can't find subnetwork: " + subnetworkAddress.ToString());
+            }
+        }
+
+        public static void SendDeleteConnectionRequest(string pathBeginAddress, string pathEndAddress, SubnetworkAddress subnetAddress)
+        {
+            Tuple<string, string> deleteTuple = new Tuple<string, string>(pathBeginAddress, pathEndAddress);
+            CSocket childSubSocket;
+            bool hasValue = SocketsByAddress.TryGetValue(subnetAddress, out childSubSocket);
+            if (hasValue)
+            {
+                childSubSocket.SendObject(DELETE_CONNECTION_REQUEST, deleteTuple);
+            }
+            else
+            {
+                LogClass.Log("Can't find subnetwork: " + subnetAddress.ToString());
             }
         }
 
@@ -235,7 +251,7 @@ namespace Subnetwork
                 {
 
                 }
-                else if (parameter.Equals(CONNECTION_REQEST_FROM_CC))
+                else if (parameter.Equals(CONNECTION_REQUEST_FROM_CC))
                 {
                     Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
                     SNP first = pathToAssign.Item1;
@@ -243,6 +259,14 @@ namespace Subnetwork
                     LogClass.Log("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
                     bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
 
+                }
+                else if(parameter.Equals(DELETE_CONNECTION_REQUEST))
+                {
+                    Tuple<string, string> pathToDelete = (Tuple<string, string>)received.Item2;
+                    string pathBegin = pathToDelete.Item1;
+                    string pathEnd = pathToDelete.Item2;
+                    LogClass.Log("Receivef DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
+                    connectionController.DeleteConnection(pathBegin, pathEnd); 
                 }
             }
         }
@@ -276,9 +300,5 @@ namespace Subnetwork
             // Maciek zrób tu co chcesz xD
         }
 
-        internal static void SendDeleteConnectionRequest(string pathBeginAddress, string pathEndAddress, SubnetworkAddress subnetAddress)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
