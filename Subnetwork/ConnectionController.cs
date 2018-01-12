@@ -194,42 +194,25 @@ namespace Subnetwork
 
                 }
 
-<<<<<<< HEAD
                 //Wyslanie PeerCoordination jezeli zestawiane polaczenie przebiega przez 2 domeny
-=======
-            if (PathEndAddressFromDifferentDomain != null)
-            {
-                //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
-                SNP lastSNPinThisDomain = null;
-                foreach (SNP snp in SNPList)
-                {
-                    foreach (List<Tuple<IPAddress, IPAddress>> list in OtherDomainSNPPAddressTranslation.Values)
-                    {
-                        foreach (Tuple<IPAddress, IPAddress> tuple in list)
-                        {
-                            if (tuple.Item1.ToString() == snp.Address)
-                            {
-                                lastSNPinThisDomain = snp;
-                            }
-                        }
-                    }
-                }
-
->>>>>>> 165a93db0fb15e0c85105558faa41c4aba0f4bab
 
                 if (PathEndAddressFromDifferentDomain != null)
                 {
                     //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
-                    SNP lastSNPinThisDomain = SNPList.Last();
-
-                    if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                    SNP lastSNPinThisDomain = null;
+                    foreach (SNP snp in SNPList)
                     {
-                        LogClass.Log("PeerCoordination OK.");
+                        foreach (List<Tuple<IPAddress, IPAddress>> list in OtherDomainSNPPAddressTranslation.Values)
+                        {
+                            foreach (Tuple<IPAddress, IPAddress> tuple in list)
+                            {
+                                if (tuple.Item1.ToString() == snp.Address)
+                                {
+                                    lastSNPinThisDomain = snp;
+                                }
+                            }
+                        }
                     }
-                    else
-                    {
-                        LogClass.Log("PeerCoordination FAIL.");
-                    };
                 }
             }
             if (SNPPList.Count > 0)

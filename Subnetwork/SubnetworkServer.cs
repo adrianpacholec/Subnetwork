@@ -98,12 +98,16 @@ namespace Subnetwork
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
+                string response=childSubSocket.ReceiveObject().Item1;
+                if (response.Equals(CSocket.ACK_FUNCTION))
+                    return true;
+                else return false;
             }
             else
             {
                 LogClass.Log("Can't find subnetwork: " + subnetworkAddress.ToString());
             }
-            return true;
+            return false;
         }
 
         public static void CallDeleteLinkConnectionRequestInLRM(SNP SNPpathBegin, SNP SNPpathEnd, int capacity)
@@ -126,7 +130,7 @@ namespace Subnetwork
             }
         }
 
-        public static void SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd, bool val)
+        public static bool SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd, bool val)
 
         {
             //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
@@ -139,8 +143,11 @@ namespace Subnetwork
                 otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
             else
                 otherDomainSocket.SendObject(DELETE_PEER_COORDINATION, peerTuple);
-            object zrobictuzebyodbieraltruealbofalse = otherDomainSocket.ReceiveObject();
+            string response = otherDomainSocket.ReceiveObject().Item1;
             otherDomainSocket.Close();
+            if (response.Equals(CSocket.ACK_FUNCTION))
+                return true;
+            else return false;
         }
 
         public static Tuple<SNP, SNP> callLinkConnectionRequestInLRM(SNPP connectionBegin, SNPP connectionEnd, int capacity)

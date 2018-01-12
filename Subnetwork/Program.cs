@@ -35,8 +35,8 @@ namespace Subnetwork
                     string[] killParams = decision.Split(' ');
                     string firstSNPaddress = killParams[1];
                     string secondSNPaddress = killParams[2];
-                    Tuple<string,string, int> pathToReroute = LRM.DeleteLink(firstSNPaddress, secondSNPaddress);
-                    CC.ConnectionRequestFromNCC(pathToReroute.Item1, pathToReroute.Item2, pathToReroute.Item3);
+                    //Tuple<string,string, int> pathToReroute = LRM.DeleteLink(firstSNPaddress, secondSNPaddress);
+                  //  CC.ConnectionRequestFromNCC(pathToReroute.Item1, pathToReroute.Item2, pathToReroute.Item3);
 
                 }
             }
