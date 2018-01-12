@@ -100,8 +100,15 @@ namespace Subnetwork
                 childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
                 string response=childSubSocket.ReceiveObject().Item1;
                 if (response.Equals(CSocket.ACK_FUNCTION))
+                {
+                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "set connection between:" + pathBegin.Address + " and " + pathEnd.Address);
                     return true;
-                else return false;
+                }
+                else
+                {
+                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "can't set up the connection between:" + pathBegin.Address + " and " + pathEnd.Address);
+                    return false;
+                }
             }
             else
             {
@@ -264,12 +271,6 @@ namespace Subnetwork
                     Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
                     connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     LogClass.Log("Received PEER COORDINATION from AS_1");
-                }
-                else if (parameter.Equals(DELETE_PEER_COORDINATION))
-                {
-                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
-                    connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
-                    LogClass.Log("Received DELETE PEER COORDINATION from AS_1");
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
