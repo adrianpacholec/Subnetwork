@@ -301,7 +301,7 @@ namespace Subnetwork
 
         public static void SendTopologyUpdateToRC(bool delete, SNP localTopologyUpdate)
         {
-            // Maciek zrób tu co chcesz xD
+            routingController.LocalTopologyIn(delete, localTopologyUpdate);
         }
 
     }
