@@ -53,7 +53,7 @@ namespace Subnetwork
                 {
                     splitedParameters = str.Split(' ');
                     lrm.AddEdgeSNPP(new Subnetwork.SNPP(splitedParameters[MY_SNPP_ADDRESS], Int32.Parse(splitedParameters[MY_SNPP_CAPACITY])));
-                    cc.addKeyToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]));
+                    cc.AddKeyToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]));
                 }
             }
             foreach (string str in loaded)
@@ -61,7 +61,7 @@ namespace Subnetwork
                 if (str[0] != '#')
                 {
                     splitedParameters = str.Split(' ');
-                    cc.addValueToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]), new Tuple<IPAddress, IPAddress>(IPAddress.Parse(splitedParameters[MY_SNPP_ADDRESS]), IPAddress.Parse(splitedParameters[EXT_SNPP_ADDRESS])));
+                    cc.AddValueToDictionary(new SubnetworkAddress(splitedParameters[SUBNET_ADDRESS_POSITION], splitedParameters[SUBNET_MASK_POSITION]), new Tuple<IPAddress, IPAddress>(IPAddress.Parse(splitedParameters[MY_SNPP_ADDRESS]), IPAddress.Parse(splitedParameters[EXT_SNPP_ADDRESS])));
                 }
             }
         }

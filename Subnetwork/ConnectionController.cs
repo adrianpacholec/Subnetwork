@@ -42,19 +42,19 @@ namespace Subnetwork
             LoadContainedSubnetworks();
         }
 
-        public void addKeyToDictionary(SubnetworkAddress key)
+        public void AddKeyToDictionary(SubnetworkAddress key)
         {
             if (!OtherDomainSNPPAddressTranslation.ContainsKey(key))
                 OtherDomainSNPPAddressTranslation.Add(key, new List<Tuple<IPAddress, IPAddress>>());
         }
 
-        public void addValueToDictionary(SubnetworkAddress key, Tuple<IPAddress, IPAddress> value)
+        public void AddValueToDictionary(SubnetworkAddress key, Tuple<IPAddress, IPAddress> value)
         {
-            List<Tuple<IPAddress, IPAddress>> list = getFromDictionary(key);
+            List<Tuple<IPAddress, IPAddress>> list = GetFromDictionary(key);
             list.Add(value);
         }
 
-        public List<Tuple<IPAddress, IPAddress>> getFromDictionary(SubnetworkAddress address)
+        public List<Tuple<IPAddress, IPAddress>> GetFromDictionary(SubnetworkAddress address)
         {
             foreach (KeyValuePair<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> entry in OtherDomainSNPPAddressTranslation)
             {
@@ -68,7 +68,7 @@ namespace Subnetwork
         {
             LogClass.Log("loading contained subnetworks.");
             string fileName = Config.getProperty("ContainedSubnetworks");
-            string[] loadedFile = loadFile(fileName);
+            string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
             foreach (string str in loadedFile)
             {
@@ -77,22 +77,8 @@ namespace Subnetwork
                 Console.WriteLine(str);
             }
         }
-        /*
-        public void LoadLinkList()
-        {
-            string fileName = Config.getProperty("linkList");
-            string[] loadedFile = loadFile(fileName);
-            string[] linkParams = null;
-            foreach (string str in loadedFile)
-            {
-                linkParams = str.Split(PARAM_SEPARATOR);
-                linkList.Add(new Link(new SNPP(linkParams[FIRST_ADDRESS_POS], Int32.Parse(linkParams[FIRST_CAPACITY_POS])),
-                                      new SNPP(linkParams[SECOND_ADDRESS_POS], Int32.Parse(linkParams[SECOND_CAPACITY_POS]))));
-                Console.WriteLine(str);
-            }
-        }
-        */
-        private string[] loadFile(String fileName)
+
+        private string[] LoadFile(String fileName)
         {
             string[] fileLines = System.IO.File.ReadAllLines(fileName);
             return fileLines;
@@ -111,19 +97,11 @@ namespace Subnetwork
             return SNPpair;
         }
 
-        private Tuple<SNP, SNP> LinkConnectionRequest(SNP connectionBegin, SNPP connectionEnd)
+        private void DeleteLinkConnectionRequest(SNP SNPpathBegin, SNP SNPpathEnd)
         {
-            //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            Tuple<SNP, SNP> SNPpair = null;
-            return SNPpair;
+            SubnetworkServer.CallDeleteLinkConnectionRequestInLRM(SNPpathBegin, SNPpathEnd, 0);
         }
 
-        private Tuple<SNP, SNP> LinkConnectionRequest(SNPP connectionBegin, SNP connectionEnd)
-        {
-            //Wysyła parę SNPP od LRM i czeka na odpowiedź
-            Tuple<SNP, SNP> SNPpair = null;
-            return SNPpair;
-        }
 
         // % % % % % % % % % % % % % % % % % % % % % % % % % // 
         // %%%%%%%%%%%%%%%%% GŁOWNA METODA %%%%%%%%%%%%%%%%% //    
@@ -216,7 +194,28 @@ namespace Subnetwork
 
                 }
 
+<<<<<<< HEAD
                 //Wyslanie PeerCoordination jezeli zestawiane polaczenie przebiega przez 2 domeny
+=======
+            if (PathEndAddressFromDifferentDomain != null)
+            {
+                //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
+                SNP lastSNPinThisDomain = null;
+                foreach (SNP snp in SNPList)
+                {
+                    foreach (List<Tuple<IPAddress, IPAddress>> list in OtherDomainSNPPAddressTranslation.Values)
+                    {
+                        foreach (Tuple<IPAddress, IPAddress> tuple in list)
+                        {
+                            if (tuple.Item1.ToString() == snp.Address)
+                            {
+                                lastSNPinThisDomain = snp;
+                            }
+                        }
+                    }
+                }
+
+>>>>>>> 165a93db0fb15e0c85105558faa41c4aba0f4bab
 
                 if (PathEndAddressFromDifferentDomain != null)
                 {
@@ -243,9 +242,20 @@ namespace Subnetwork
         {
             List<SNP> SNPList = existingConnections[new string[] { pathBegin, pathEnd }];
 
+            //w kazdym SNP ustaw "deleting" na true
+            SNPList.ForEach(x => x.Deleting = true);
+
             string PathEndAddressFromDifferentDomain = null;
 
-            //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
+            //usuniecie alokacji w LRM
+            for (int index = 0; index < SNPList.Count; index += 2)
+            {
+                SNP SNPpathBegin = SNPList[index];
+                SNP SNPpathEnd = SNPList[index + 1];
+                DeleteLinkConnectionRequest(SNPpathBegin, SNPpathEnd);
+            }
+
+            //Wysłanie DeleteConnectionRequesta do podsieci, jeżeli na liscie SNP znajdą się 2 adresy brzegowe tej podsieci
 
             for (int index = 0; index < SNPList.Count - 1; index++)
             {
@@ -253,21 +263,19 @@ namespace Subnetwork
                 for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
                     SNP SNPpathEnd = SNPList[jndex];
-
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
-                            LogClass.Log("Subnetwork Connection set properly.");
+                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd + " successful.");
                         }
                         else
                         {
-                            LogClass.Log("Epic fail.");
+                            LogClass.Log("Epic fail xD");
                             return false;
                         }
                     }
                 }
-
             }
 
             //sprawdzamy, czy adres koncowy jest w naszej domenie
@@ -276,22 +284,50 @@ namespace Subnetwork
                 PathEndAddressFromDifferentDomain = pathEnd;
 
                 //TODO: sprawdz, czy ktorys z SNP ma adres SNPP brzegowego tej domeny
-                SNP lastSNPinThisDomain = SNPList.Last();
-
-                if (PeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                SNP lastSNPinThisDomain = null;
+                foreach (SNP snp in SNPList)
                 {
-                    LogClass.Log("PeerCoordination OK.");
+                    foreach (List<Tuple<IPAddress, IPAddress>> list in OtherDomainSNPPAddressTranslation.Values)
+                    {
+                        foreach (Tuple<IPAddress, IPAddress> tuple in list)
+                        {
+                            if (tuple.Item1.ToString() == snp.Address)
+                            {
+                                lastSNPinThisDomain = snp;
+                            }
+                        }
+                    }
+                }
+
+                if (DeletePeerCoordinationOut(lastSNPinThisDomain, PathEndAddressFromDifferentDomain))
+                {
+                    LogClass.Log("DeletePeerCoordination OK.");
                 }
                 else
                 {
                     LogClass.Log("PeerCoordination FAIL.");
                 };
-
-
-
             }
-
             return true;  //Jesli polaczenie zestawiono poprawnie
+        }
+
+        public bool DeleteConnectionRequestOut(SNP pathBegin, SNP pathEnd)
+        {
+            //wysyla do cc poziom niżej wiadomosc usuwaj jak szalony konik
+            IPAddress subnetworkAddress = null;
+            IPAddress subnetworkAddressMask = null;
+
+            foreach (SubnetworkAddress sub in ContainedSubnetworksAddresses)
+            {
+                if (IPAddressExtensions.IsInSameSubnet(sub.subnetAddress, IPAddress.Parse(pathBegin.Address), sub.subnetMask))
+                {
+                    subnetworkAddress = sub.subnetAddress;
+                    subnetworkAddressMask = sub.subnetMask;
+                }
+            }
+            SubnetworkAddress subnetAddress = new SubnetworkAddress(subnetworkAddress.ToString(), subnetworkAddressMask.ToString());
+            SubnetworkServer.SendDeleteConnectionRequest(pathBegin.Address, pathEnd.Address, subnetAddress);
+            return true;
         }
 
         public bool ConnectionRequestFromCC(SNP pathBegin, SNP pathEnd)
@@ -312,6 +348,9 @@ namespace Subnetwork
                 SNPList.Add(SNPpair.Item1);
                 SNPList.Add(SNPpair.Item2);
             }
+
+            //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
+            existingConnections.Add(new string[] { pathBegin.Address, pathEnd.Address }, SNPList);
 
             //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
 
@@ -388,7 +427,7 @@ namespace Subnetwork
 
             //przepustowosc bierzemy z przekazanego SNP
 
-            SNPList.Add(new SNP(0, pathBegin.Address, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
+            SNPList.Add(new SNP(pathBegin.Label, pathBegin.Address, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
             SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
 
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
@@ -431,9 +470,14 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
-            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd);
+            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
             return true;
         }
 
+        private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
+        {
+            SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
+            return true;
+        }
     }
 }

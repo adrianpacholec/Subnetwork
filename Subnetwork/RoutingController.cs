@@ -32,7 +32,7 @@ namespace Subnetwork
             return scheduled;
         }
 
-        private void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
+        public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
 
             List<SNP> existingSNPs = SNPsbySNPPaddress[localTopologyUpdate.Address];
