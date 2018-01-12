@@ -23,7 +23,12 @@ namespace Subnetwork
             weight = Int32.MaxValue;
         }
 
-        public Edge(int idstart, int idend, int weight, Vertex v1, Vertex v2, bool directing)
+        public static void clearEdgeCount()
+        {
+            countEdge = 0;
+        }
+
+        public Edge(int idstart, int idend, int weight,int capacity, Vertex v1, Vertex v2, bool directing)
         {
             
             id=++countEdge;
@@ -31,6 +36,7 @@ namespace Subnetwork
             endVertex = v2;
             this.weight = weight;
             isDirected = directing;
+            this.capacity = capacity;
 
         }
         public int getid()

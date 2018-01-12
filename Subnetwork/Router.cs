@@ -21,10 +21,6 @@ namespace Subnetwork
         {
             this.subnetworks = subnetworks;
             this.links = links;
-            subnetwork = new Network();
-            subnetworkToVertexId = new Dictionary<SubnetworkAddress, int>();
-            linkAndEdgeIdCorrelation = new Dictionary<Link, int>();
-            vertexIdToSubnetwork = new Dictionary<int, SubnetworkAddress>();
             TranslateSubnetworkData();
             subnetwork.fillAdjacencyMatrix(vertexIdToSubnetwork.Count);
             subnetwork.fillIncidenceMatrix(subnetwork.AdjacencyMatrix);
@@ -32,13 +28,20 @@ namespace Subnetwork
 
         private void TranslateSubnetworkData()
         {
+            subnetwork = new Network();
+            Edge.clearEdgeCount();
+            subnetworkToVertexId = new Dictionary<SubnetworkAddress, int>();
+            linkAndEdgeIdCorrelation = new Dictionary<Link, int>();
+            vertexIdToSubnetwork = new Dictionary<int, SubnetworkAddress>();
             translateSubnetworksToNodes();
             translateLinksToEdges();
 
         }
 
-        public List<SNPP> route(IPAddress sourceAddress, IPAddress destinationAddress)
+        public List<SNPP> route(IPAddress sourceAddress, IPAddress destinationAddress, int capacity)
         {
+            TranslateSubnetworkData();
+            refreshSubnetwork(capacity);
             List<SNPP> path = new List<SNPP>();
             List<Edge> edges = new List<Edge>();
             List<SNPP> translated = new List<SNPP>();
@@ -55,6 +58,13 @@ namespace Subnetwork
                 translated = translateEdgesToSNPPs(edges);
             }
             return translated;
+        }
+
+        private void refreshSubnetwork(int capacity)
+        {
+            subnetwork.removeLinksWithLowerCapacity(capacity);
+            subnetwork.fillAdjacencyMatrix(vertexIdToSubnetwork.Count);
+            subnetwork.fillIncidenceMatrix(subnetwork.AdjacencyMatrix);
         }
 
         private List<SNPP> translateEdgesToSNPPs(List<Edge> edges)

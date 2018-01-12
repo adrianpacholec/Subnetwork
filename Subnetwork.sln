@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subnetwork", "Subnetwork\Su
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{31A45336-884B-473A-BADA-D30D6E175C0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomSocket", "..\customSocket\CustomSocket.csproj", "{A0C09126-9DD3-4857-8C90-EC2B090BEB11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomSocket", "..\..\..\..\Documents\Visual Studio 2015\Projects\CustomSocket\CustomSocket\CustomSocket.csproj", "{A0C09126-9DD3-4857-8C90-EC2B090BEB11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

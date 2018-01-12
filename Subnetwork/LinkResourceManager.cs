@@ -97,14 +97,45 @@ namespace Subnetwork
                 SNPP SNPPpathEnd = (SNPP)pathEnd;
                 SNPpair = AllocateLink(SNPPpathBegin, SNPPpathEnd, capacity);
             }
+
+            //jesli SNPPki są równe to znaczy ze są fejkowe i trzeba znaleźć SNPP o tym adresie
+            else if (pathBegin == pathEnd)
+            {
+                SNPP fakeSNPP = (SNPP)pathBegin;
+                string address = fakeSNPP.Address;
+                SNPP realSNPP = myEdgeSNPPs.Find(i => i.Address == address);
+                if (realSNPP.Capacity > capacity)
+                {
+                    realSNPP.Capacity -= capacity;
+                    //generuje nowy label
+                    int potentiallyNewLabel = GimmeNewLabel();
+
+                    //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
+                    if (!SNPsbySNPPaddress.ContainsKey(realSNPP.Address))
+                    {
+                        SNPsbySNPPaddress.Add(realSNPP.Address, new List<SNP>());
+                    }
+
+                    //tworzenie SNP poczatkowego SNPP
+                    SNP createdSNP = new SNP(potentiallyNewLabel, fakeSNPP.Address, capacity); //uses remembered label
+                    SNPsbySNPPaddress[fakeSNPP.Address].Add(createdSNP);
+                    Topology(createdSNP);
+
+                    SNPpair = new Tuple<SNP, SNP>(createdSNP, createdSNP);
+                    return SNPpair;
+
+                }
+
+            }
             else if (pathBegin.GetType() == typeof(SNP) && pathEnd.GetType() == typeof(SNP))
             {
                 SNP SNPpathBegin = (SNP)pathBegin;
                 SNP SNPpathEnd = (SNP)pathEnd;
                 RemoveLink(SNPpathBegin, SNPpathEnd);
             }
-            return SNPpair;
-        }
+                return SNPpair;
+            
+        } 
 
         private void RemoveLink(SNP SNPpathBegin, SNP SNPpathEnd)
         {
@@ -128,7 +159,8 @@ namespace Subnetwork
             if (!SNPsbySNPPaddress.ContainsKey(pathBegin.Address))
             {
                 SNPsbySNPPaddress.Add(pathBegin.Address, new List<SNP>());
-                SNPsbySNPPaddress.Add(pathEnd.Address, new List<SNP>());
+                if(pathBegin!=pathEnd)
+                    SNPsbySNPPaddress.Add(pathEnd.Address, new List<SNP>());
             }
 
             //generuje nowy label
@@ -143,12 +175,19 @@ namespace Subnetwork
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
             Topology(SNPpathBegin);
 
-            //tworzenie SNP koncowego SNPP
-            SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
-            SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
-            Topology(SNPpathEnd);
+            if (pathBegin != pathEnd)
+            {
+                //tworzenie SNP koncowego SNPP
+                SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
+                SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
+                Topology(SNPpathEnd);
 
-            SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);
+                SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);
+            }
+            else
+            {
+                SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathBegin);
+            }
             return SNPpair;
         }
 

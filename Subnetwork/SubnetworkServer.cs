@@ -90,7 +90,7 @@ namespace Subnetwork
             return fileLines;
         }
 
-        public static void SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
+        public static bool SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
             CSocket childSubSocket;
@@ -103,6 +103,7 @@ namespace Subnetwork
             {
                 LogClass.Log("Can't find subnetwork: " + subnetworkAddress.ToString());
             }
+            return true;
         }
 
         public static void CallDeleteLinkConnectionRequestInLRM(SNP SNPpathBegin, SNP SNPpathEnd, int capacity)
