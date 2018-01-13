@@ -531,14 +531,12 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
-            SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
-            return true;
+            return SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
         }
 
         private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
         {
-            SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
-            return true;
+            return SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
         }
     }
 }
