@@ -98,7 +98,7 @@ namespace Subnetwork
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
-                string response = "elo";//childSubSocket.ReceiveObject().Item1;
+                string response = childSubSocket.ReceiveObject().Item1;
                 if (response.Equals(CSocket.ACK_FUNCTION))
                 {
                     LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "set connection between:" + pathBegin.Address + " and " + pathEnd.Address);
@@ -107,7 +107,7 @@ namespace Subnetwork
                 else
                 {
                     LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "can't set up the connection between:" + pathBegin.Address + " and " + pathEnd.Address);
-                    return true;
+                    return false;
                 }
             }
             else
@@ -263,14 +263,17 @@ namespace Subnetwork
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
                     LogClass.Log("Received CONNECTION REQUEST from NCC.");
-                    connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
+                    bool success=connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
+                    SendACKorNACK(success, connected);
+
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
                     Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
-                    connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                    bool success=connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     LogClass.Log("Received PEER COORDINATION from AS_1");
+                    SendACKorNACK(success, connected);
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
                 {
@@ -283,6 +286,8 @@ namespace Subnetwork
                     SNP second = pathToAssign.Item2;
                     LogClass.Log("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
                     bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
+                    SendACKorNACK(response, connected);
+
 
                 }
                 else if(parameter.Equals(DELETE_CONNECTION_REQUEST))
@@ -291,7 +296,7 @@ namespace Subnetwork
                     string pathBegin = pathToDelete.Item1;
                     string pathEnd = pathToDelete.Item2;
                     LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
-                    connectionController.DeleteConnection(pathBegin, pathEnd); 
+                    bool success=connectionController.DeleteConnection(pathBegin, pathEnd);
                 }
             }
         }
@@ -312,6 +317,14 @@ namespace Subnetwork
                 SocketsByAddress.Add(connectedSubnetAddress, connectedSocket);
                 LogClass.Log("Subnetwork " + operatedSubnetwork + " connected");
             }
+        }
+
+        private static void SendACKorNACK(bool success, CSocket connected)
+        {
+            if (success)
+                connected.SendACK();
+            else
+                connected.SendNACK();
         }
 
         private static void InsertSNPPSToRC(List<SNPP> receivedList)
