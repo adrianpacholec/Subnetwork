@@ -29,9 +29,16 @@ namespace Subnetwork
             return scheduled;
         }
 
+        public void DeleteLink(string begin, string end)
+        {
+            Link linkToBeDeleted = links.Find(x => (x.FirstSNPP.Address == begin && x.SecondSNPP.Address == end));
+            links.Remove(linkToBeDeleted);
+            LogClass.Log("Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
+        }
+
         public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
-            Link link = links.Find(x => (x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address==localTopologyUpdate.Address));
+            Link link = links.Find(x => x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address==localTopologyUpdate.Address);
             SNPP snpp = null;
             if (link.FirstSNPP.Address == localTopologyUpdate.Address)
                 snpp = link.FirstSNPP;

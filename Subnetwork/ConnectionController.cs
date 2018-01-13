@@ -35,7 +35,7 @@ namespace Subnetwork
             SubnetworkAddress = Config.getProperty("SubnetworkAddress");
             SubnetworkMask = Config.getProperty("SubnetworkMask");
 
-            OtherDomainSNPPAddressTranslation = new Dictionary<Subnetwork.SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
+            OtherDomainSNPPAddressTranslation = new Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
             existingConnections = new Dictionary<string[], List<SNP>>();
             ContainedSubnetworksAddresses = new List<SubnetworkAddress>();
             linkList = new List<Link>();
@@ -140,7 +140,7 @@ namespace Subnetwork
                 foreach (SubnetworkAddress domainAddress in OtherDomainSNPPAddressTranslation.Keys)
                 {
 
-                    if (IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
+                    if (!IPAddressExtensions.IsInSameSubnet(IPAddress.Parse(pathEnd), domainAddress.subnetAddress, domainAddress.subnetMask))
                     {
                         Random random = new Random();
                         List<Tuple<IPAddress, IPAddress>> translationsList = OtherDomainSNPPAddressTranslation[domainAddress];
@@ -222,6 +222,8 @@ namespace Subnetwork
                                 if (tuple.Item1.ToString() == snp.Address)
                                 {
                                     lastSNPinThisDomain = snp;
+                                    lastSNPinThisDomain.PathBegin = pathBegin;
+                                    lastSNPinThisDomain.PathEnd = PathEndAddressFromDifferentDomain;
                                 }
                             }
                         }
@@ -281,7 +283,7 @@ namespace Subnetwork
                     SNP SNPpathEnd = SNPList[jndex];
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
                             LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd.Address + " successful.");
                         }

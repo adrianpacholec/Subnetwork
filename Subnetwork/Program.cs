@@ -23,7 +23,7 @@ namespace Subnetwork
             LinkResourceManager LRM = new LinkResourceManager();
             RoutingController RC = new RoutingController(CC.ContainedSubnetworksAddresses, LRM.Links);
             SubnetworkServer.init(CC, RC, LRM);
-            loadEdgeSNPPs(CC, LRM);
+            LoadEdgeSNPPs(CC, LRM);
 
             string decision;
             do
@@ -40,6 +40,7 @@ namespace Subnetwork
                     List<Tuple<string,string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress);
                     foreach (var path in pathsToReroute) {
                         CC.DeleteConnection(path.Item1, path.Item2);
+                        RC.DeleteLink(firstSNPaddress, secondSNPaddress);
                         CC.ConnectionRequestFromNCC(path.Item1, path.Item2, path.Item3);
                     }
                 }
@@ -47,7 +48,7 @@ namespace Subnetwork
             while (decision != "exit");
         }
 
-        private static void loadEdgeSNPPs(ConnectionController cc, LinkResourceManager lrm)
+        private static void LoadEdgeSNPPs(ConnectionController cc, LinkResourceManager lrm)
         {
             string[] loaded = LoadFile(Config.getProperty("portsToDomainsFile"));
             string[] splitedParameters;

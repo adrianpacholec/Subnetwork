@@ -181,7 +181,7 @@ namespace Subnetwork
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
             Topology(SNPpathBegin);
 
-            if (pathBegin != pathEnd)
+            if (pathBegin.Address != pathEnd.Address)
             {
                 //tworzenie SNP koncowego SNPP
                 SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
