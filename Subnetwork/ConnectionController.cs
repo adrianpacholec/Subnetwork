@@ -84,6 +84,19 @@ namespace Subnetwork
             return fileLines;
         }
 
+        public List<Tuple<string, string, int>> GetPathsContainingThisSNP(string SNPaddress)
+        {
+            List<Tuple<string, string, int>> pathList = null;
+
+            foreach (var entry in existingConnections)
+            {
+                if (entry.Value.Find(x => x.Address == SNPaddress) != null) {
+                    pathList.Add(new Tuple<string, string, int>(entry.Key[0], entry.Key[1], entry.Value[0].OccupiedCapacity));
+                }
+            }      
+            return pathList;
+        }
+
         private List<SNPP> RouteTableQuery(string pathBegin, string pathEnd, int capacity)
         {
             List<SNPP> SNPPlist = SubnetworkServer.callRouteTableQueryInRC(pathBegin, pathEnd, capacity);
@@ -223,6 +236,7 @@ namespace Subnetwork
                     {
                         LogClass.Log("PeerCoordination FAIL.");
                     };
+
                 }
             }
             if (SNPPList.Count > 0)
@@ -233,7 +247,16 @@ namespace Subnetwork
 
         public bool DeleteConnection(string pathBegin, string pathEnd)
         {
-            List<SNP> SNPList = existingConnections[new string[] { pathBegin, pathEnd }];
+            List<SNP> SNPList = null;
+
+            //new string[] { pathBegin, pathEnd }
+            foreach (string[] key in existingConnections.Keys)
+            {
+                if ((key[0] == pathBegin && key[1] == pathEnd) || (key[1] == pathBegin && key[0] == pathEnd))
+                {
+                    SNPList = existingConnections[key];
+                }
+            }
 
             //w kazdym SNP ustaw "deleting" na true
             SNPList.ForEach(x => x.Deleting = true);

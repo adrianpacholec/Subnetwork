@@ -20,7 +20,7 @@ namespace Subnetwork
         public event calledAlgorithm endAlgPrima;
 
 
-       public Network()
+        public Network()
         {
             VertexList = new List<Vertex>();
             EdgeList = new List<Edge>();
@@ -28,7 +28,7 @@ namespace Subnetwork
             MST = new List<Edge>();
         }
 
-      
+
         public void addVertex(Vertex vertex)
         {
             VertexList.Add(vertex);
@@ -39,21 +39,21 @@ namespace Subnetwork
             Vertex first = getVertex(firstVertexId, VertexList);
             Vertex second = getVertex(secondVertexId, VertexList);
             int weight = 1000000 / capacity;
-            Edge created = new Edge(firstVertexId, secondVertexId, weight,capacity, first, second, false);
+            Edge created = new Edge(firstVertexId, secondVertexId, weight, capacity, first, second, false);
             EdgeList.Add(created);
         }
 
         public void algPrima()
         {
             int h1;
-            int nbOfEndVertexOfTheLightestEdge=0;
+            int nbOfEndVertexOfTheLightestEdge = 0;
             int startvert = 0;
-            bool flag = false; 
-            int[,] mstMatrix = new int[AdjacencyMatrix.GetLength(1),AdjacencyMatrix.GetLength(1)];
+            bool flag = false;
+            int[,] mstMatrix = new int[AdjacencyMatrix.GetLength(1), AdjacencyMatrix.GetLength(1)];
             bool[] IsVisited = new bool[VertexList.Count];
             IsVisited[0] = true;
 
-            for (int a = 0; a < VertexList.Count-1; a++)
+            for (int a = 0; a < VertexList.Count - 1; a++)
             {
                 for (int b = 0; b < mstMatrix.GetLength(0); b++)
                 {
@@ -74,7 +74,7 @@ namespace Subnetwork
                 IsVisited[nbOfEndVertexOfTheLightestEdge] = true;
                 flag = false;
             }
-            endAlgPrima(this, mstMatrix);        
+            endAlgPrima(this, mstMatrix);
         }
 
         internal void removeLinksWithLowerCapacity(int capacity)
@@ -86,7 +86,7 @@ namespace Subnetwork
 
         public void algFloyda()
         {
-        
+
 
             int range = AdjacencyMatrix.GetLength(0);
             for (int a = 0; a < range; a++)
@@ -96,12 +96,12 @@ namespace Subnetwork
                     for (int j = 0; j < range; j++)
                     {
                         if (AdjacencyMatrix[i, j] > AdjacencyMatrix[i, k] + AdjacencyMatrix[k, j])
-                            {
-                                IncidenceMatrix[i, j] = IncidenceMatrix[k, j];
-                                AdjacencyMatrix[i, j] = AdjacencyMatrix[i, k] + AdjacencyMatrix[k, j];
-                            }
-                    }           
-         }
+                        {
+                            IncidenceMatrix[i, j] = IncidenceMatrix[k, j];
+                            AdjacencyMatrix[i, j] = AdjacencyMatrix[i, k] + AdjacencyMatrix[k, j];
+                        }
+                    }
+        }
 
         #region metody_operujace_na_macierzach 
 
@@ -133,53 +133,54 @@ namespace Subnetwork
 
         public string getIndexOfPreviousVertex(string path, int indexfirstvertex, int indexsecondvertex) //rekurencyjna metoda zwracajaca sciezke o poczatku indexfirst i koncu indexsecond
         {
-             if (IncidenceMatrix[indexfirstvertex, indexsecondvertex] == indexfirstvertex)
+            if (IncidenceMatrix[indexfirstvertex, indexsecondvertex] == indexfirstvertex)
             {
                 path += IncidenceMatrix[indexfirstvertex, indexsecondvertex];
                 return path;
             }
-            else return IncidenceMatrix[indexfirstvertex, indexsecondvertex] +" "+(getIndexOfPreviousVertex(path, indexfirstvertex, IncidenceMatrix[indexfirstvertex, indexsecondvertex]));
-       }
+            else return IncidenceMatrix[indexfirstvertex, indexsecondvertex] + " " + (getIndexOfPreviousVertex(path, indexfirstvertex, IncidenceMatrix[indexfirstvertex, indexsecondvertex]));
+        }
 
         public void createStringBasedPath(string path)  //dodaje sciezke do listy scieżek na podstawie stringa z ciągiem wierzchołków
         {
             if (!String.IsNullOrEmpty(path))
             {
                 int b = 0;
-                string[] nbsVertices= path.Split(' ');
-                PathList.Add(new Path(Int32.Parse(nbsVertices[0])+1, Int32.Parse(nbsVertices[nbsVertices.GetLength(0)-1])+1));
-                for (int a=0; a<nbsVertices.GetLength(0)-1; a++)
+                string[] nbsVertices = path.Split(' ');
+                PathList.Add(new Path(Int32.Parse(nbsVertices[0]) + 1, Int32.Parse(nbsVertices[nbsVertices.GetLength(0) - 1]) + 1));
+                for (int a = 0; a < nbsVertices.GetLength(0) - 1; a++)
                 {
                     b = a + 1;
-                    PathList[PathList.Count - 1].edgesInPath.Add(getEdge(Int32.Parse(nbsVertices[a])+1, Int32.Parse(nbsVertices[b])+1, EdgeList));
+                    PathList[PathList.Count - 1].edgesInPath.Add(getEdge(Int32.Parse(nbsVertices[a]) + 1, Int32.Parse(nbsVertices[b]) + 1, EdgeList));
 
                 }
             }
         }
 
-        public string getPathFromIncidenceMatrix(string path,int indexfirstvertex, int indexsecondvertex) //uzupełnienie metody getIndexOfPreviousVertex ktora dodaje ostatni wierzchołek
+        public string getPathFromIncidenceMatrix(string path, int indexfirstvertex, int indexsecondvertex) //uzupełnienie metody getIndexOfPreviousVertex ktora dodaje ostatni wierzchołek
         {
             try
             {
                 return indexsecondvertex + " " + getIndexOfPreviousVertex(path, indexfirstvertex, indexsecondvertex);
-            }catch(IndexOutOfRangeException e)
+            }
+            catch (IndexOutOfRangeException e)
             {
-                return "";
+                return e.ToString();
             }
         }
 
-        public int getNbEndVertexOfLightestEdge(int vertexindex, bool[]isvisited) //zwraca numer wierzchołka do którego koszt dojścia jest najmniejszy i jest jeszcze nieodwiedzony (jeśli nie ma takiego zwraca -1)
+        public int getNbEndVertexOfLightestEdge(int vertexindex, bool[] isvisited) //zwraca numer wierzchołka do którego koszt dojścia jest najmniejszy i jest jeszcze nieodwiedzony (jeśli nie ma takiego zwraca -1)
         {
             int weight = Int32.MaxValue;
-            int nb=-1;
-            for(int a=0; a<AdjacencyMatrix.GetLength(1); a++)
+            int nb = -1;
+            for (int a = 0; a < AdjacencyMatrix.GetLength(1); a++)
                 if (weight > AdjacencyMatrix[vertexindex, a] && isvisited[a] != true)
                 {
                     weight = AdjacencyMatrix[vertexindex, a];
                     nb = a;
                 }
             return nb;
-            
+
         }
         #endregion
 
@@ -200,13 +201,13 @@ namespace Subnetwork
             for (int a = 0; a < verlist.Count; a++)
                 if (verlist[a].id == id)
                     ver = verlist[a];
-                    
+
             return ver;
         }
         public List<Edge> getPath(int v1id, int v2id)
         {
-            addPath(v1id-1, v2id-1); //bo przekazujemy index
-            return getEdgeslist(v1id, v2id);          
+            addPath(v1id - 1, v2id - 1); //bo przekazujemy index
+            return getEdgeslist(v1id, v2id);
         }
 
         public List<Edge> getEdgeslist(int v1id, int v2id) //zwraca liste krawędzi pomiędzy wierzcholkiem v1index i v2index (LISTA MUSI BYC W PATHLIST -TRZEBA JĄ TAM NAJPIERW DODAC INNA METODA) - DO ZMIANY. DZIALA DLA KRAWEDZI NIESKIEROWANYCH
@@ -215,7 +216,7 @@ namespace Subnetwork
             for (int a = 0; a < PathList.Count; a++)
             {
 
-                if ((v1id == PathList[a].idfrom && v2id == PathList[a].idto)|| (v1id == PathList[a].idto && v2id == PathList[a].idfrom)) //to nie zadziala dla krawedzi skierowanych!!!
+                if ((v1id == PathList[a].idfrom && v2id == PathList[a].idto) || (v1id == PathList[a].idto && v2id == PathList[a].idfrom)) //to nie zadziala dla krawedzi skierowanych!!!
                 {
                     list = PathList[a].edgesInPath;
                     break;
@@ -242,7 +243,7 @@ namespace Subnetwork
             path = getPathFromIncidenceMatrix(path, idStartV, idEndV);
             createStringBasedPath(path);
         }
-       
+
 
 
     }

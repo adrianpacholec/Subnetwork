@@ -133,14 +133,14 @@ namespace Subnetwork
                 SNP SNPpathEnd = (SNP)pathEnd;
                 RemoveLink(SNPpathBegin, SNPpathEnd);
             }
-                return SNPpair;
-            
-        } 
+            return SNPpair;
+
+        }
 
         private void RemoveLink(SNP SNPpathBegin, SNP SNPpathEnd)
         {
             List<SNP> existingSNPs = new List<SNP>();
- 
+
             SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Address == SNPpathBegin.Address);
             SNPsbySNPPaddress[SNPpathBegin.Address].Remove(BeginToBeDeleted);
             Topology(SNPpathBegin);
@@ -159,7 +159,7 @@ namespace Subnetwork
             if (!SNPsbySNPPaddress.ContainsKey(pathBegin.Address))
             {
                 SNPsbySNPPaddress.Add(pathBegin.Address, new List<SNP>());
-                if(pathBegin!=pathEnd)
+                if (pathBegin != pathEnd)
                     SNPsbySNPPaddress.Add(pathEnd.Address, new List<SNP>());
             }
 
@@ -167,7 +167,7 @@ namespace Subnetwork
             int potentiallyNewLabel = GimmeNewLabel();
 
             //sprawdz, czy wygenerowany label nie wystapil w SNPs - jesli tak, wygeneruj inny label
-            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];                              
+            existingSNPs = SNPsbySNPPaddress[pathBegin.Address];
             while (existingSNPs.Find(x => x.Label == potentiallyNewLabel) != null) potentiallyNewLabel = GimmeNewLabel();
 
             //tworzenie SNP poczatkowego SNPP
