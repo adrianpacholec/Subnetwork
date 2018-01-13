@@ -39,12 +39,12 @@ namespace Subnetwork
                 snpp = link.SecondSNPP;
             if (delete)
             {
-                snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
+                snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
                 LogClass.Log("Removed " + localTopologyUpdate.Address + ".");
             }
             else
             {
-                snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
+                snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
                 LogClass.Log("Added " + localTopologyUpdate.Address + ".");
             }
         }

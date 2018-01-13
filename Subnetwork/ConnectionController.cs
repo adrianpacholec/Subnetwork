@@ -86,7 +86,7 @@ namespace Subnetwork
 
         public List<Tuple<string, string, int>> GetPathsContainingThisSNP(string SNPaddress)
         {
-            List<Tuple<string, string, int>> pathList = null;
+            List<Tuple<string, string, int>> pathList = new List<Tuple<string, string, int>>();
 
             foreach (var entry in existingConnections)
             {
@@ -283,7 +283,7 @@ namespace Subnetwork
                     {
                         if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
-                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd + " successful.");
+                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd.Address + " successful.");
                         }
                         else
                         {

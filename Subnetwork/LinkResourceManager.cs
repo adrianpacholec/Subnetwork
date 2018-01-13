@@ -141,13 +141,19 @@ namespace Subnetwork
         {
             List<SNP> existingSNPs = new List<SNP>();
 
-            SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Address == SNPpathBegin.Address);
-            SNPsbySNPPaddress[SNPpathBegin.Address].Remove(BeginToBeDeleted);
-            Topology(SNPpathBegin);
+            if (SNPsbySNPPaddress.ContainsKey(SNPpathBegin.Address))
+            {
+                SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Address == SNPpathBegin.Address);
+                SNPsbySNPPaddress[SNPpathBegin.Address].Remove(BeginToBeDeleted);
+                Topology(SNPpathBegin);
+            }
 
-            SNP EndToBeDeleted = SNPsbySNPPaddress[SNPpathEnd.Address].Find(x => x.Address == SNPpathEnd.Address);
-            SNPsbySNPPaddress[SNPpathEnd.Address].Remove(EndToBeDeleted);
-            Topology(SNPpathEnd);
+            if (SNPsbySNPPaddress.ContainsKey(SNPpathEnd.Address))
+            {
+                SNP EndToBeDeleted = SNPsbySNPPaddress[SNPpathEnd.Address].Find(x => x.Address == SNPpathEnd.Address);
+                SNPsbySNPPaddress[SNPpathEnd.Address].Remove(EndToBeDeleted);
+                Topology(SNPpathEnd);
+            }
         }
 
         private Tuple<SNP, SNP> AllocateLink(SNPP pathBegin, SNPP pathEnd, int capacity)
@@ -202,7 +208,7 @@ namespace Subnetwork
         {
             //wysyła SNP, które zostało uaktualnione do RC
             //Wywołanie metody serwera, która jeszcze nie jest zrobiona
-            SubnetworkServer.SendTopologyUpdateToRC(false, localTopologyUpdate);
+            SubnetworkServer.SendTopologyUpdateToRC(localTopologyUpdate.Deleting, localTopologyUpdate);
         }
 
 
