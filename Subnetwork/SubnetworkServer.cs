@@ -21,6 +21,7 @@ namespace Subnetwork
         public const String CONNECTION_REQUEST_FROM_CC = "connectionRequest";
         public const String DELETE_CONNECTION_REQUEST = "deleteRequest";
         public const String DELETE_PEER_COORDINATION = "deletePeerCoordination";
+        public const String CALL_TEARDOWN = "callTeardown";
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -300,6 +301,14 @@ namespace Subnetwork
                     bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
                     SendACKorNACK(response, connected);
 
+                }
+                else if (parameter.Equals(CALL_TEARDOWN))
+                {
+                    Tuple<string, string> pathToDeallocate = (Tuple<string, string>)received.Item2;
+                    string pathBegin = pathToDeallocate.Item1;
+                    string pathEnd = pathToDeallocate.Item2;
+                    LogClass.Log("Received TEARDOWN to deallocate connection between " + pathBegin + " and " + pathEnd);
+                    //bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
                 }
                 else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
                 {
