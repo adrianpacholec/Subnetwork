@@ -26,7 +26,6 @@ namespace Subnetwork
         public const int SUBNETWORK_MASK_POSITION = 1;
         public const int PORT_POSITION = 2;
 
-
         private static ConnectionController connectionController;
         private static RoutingController routingController;
         private static LinkResourceManager linkResourceManager;
@@ -39,7 +38,7 @@ namespace Subnetwork
         private static Dictionary<SubnetworkAddress, int> SocketsToAnotherDomains;
         private static bool acked;
         private static bool nacked;
-                                                                              
+
         public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
             connectionController = cc;
@@ -97,24 +96,32 @@ namespace Subnetwork
         public static bool SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-            
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
-                childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
-             
+                if (pathBegin.Deleting)
+                    childSubSocket.SendObject(DELETE_CONNECTION_REQUEST, connTuple);
+                else
+                    childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
+
                 while (!(acked || nacked))
                     Thread.Sleep(30);
 
                 if (acked)
                 {
-                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "set connection between:" + pathBegin.Address + " and " + pathEnd.Address);
+                    if (pathBegin.Deleting)
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " deleted connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                    else
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " set connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     acked = false;
                     return true;
                 }
-                else if(nacked)
+                else if (nacked)
                 {
-                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "can't set up the connection between:" + pathBegin.Address + " and " + pathEnd.Address);
+                    if (pathBegin.Deleting)
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't delete the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                    else
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't set up the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     nacked = false;
                     return false;
                 }
@@ -161,7 +168,10 @@ namespace Subnetwork
                 otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
             }
             else
+            {
+                otherDomainSocket.SendObject(null, new Dictionary<string, string>());
                 otherDomainSocket.SendObject(DELETE_PEER_COORDINATION, peerTuple);
+            }
             string response = otherDomainSocket.ReceiveObject().Item1;
             //otherDomainSocket.Close();
             if (response.Equals(CSocket.ACK_FUNCTION))
@@ -258,7 +268,7 @@ namespace Subnetwork
         private static void WaitForInput(CSocket connected)
         {
             if (!connected.Equals(toParentSocket))
-                ProcessConnectInformations(connected);
+                ProcessConnectInformation(connected);
             while (true)
             {
                 Tuple<String, Object> received = connected.ReceiveObject();
@@ -276,8 +286,9 @@ namespace Subnetwork
                     int capacity = parameters.getCapacity();
                     LogClass.Log("Received CONNECTION REQUEST from NCC.");
                     bool success = connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
-                    SendACKorNACK(success, connected);
-
+                    String parentSubnetworkAddress = Config.getProperty("ParentSubnetworkAddress");
+                    CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
+                    SendACKorNACK(success, c);
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
@@ -285,6 +296,13 @@ namespace Subnetwork
                     Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
                     LogClass.Log("Received PEER COORDINATION from AS 1");
                     bool success = connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                    SendACKorNACK(success, connected);
+                }
+                else if (parameter.Equals(DELETE_PEER_COORDINATION))
+                {
+                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
+                    LogClass.Log("Received DELETE PEER COORDINATION from AS 1");
+                    bool success = connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     SendACKorNACK(success, connected);
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
@@ -303,13 +321,14 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
                 {
-                    Tuple<string, string> pathToDelete = (Tuple<string, string>)received.Item2;
-                    string pathBegin = pathToDelete.Item1;
-                    string pathEnd = pathToDelete.Item2;
+                    Tuple<SNP, SNP> pathToDelete = (Tuple<SNP, SNP>)received.Item2;
+                    string pathBegin = pathToDelete.Item1.Address;
+                    string pathEnd = pathToDelete.Item2.Address;
                     LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
                     bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
+                    SendACKorNACK(success, connected);
                 }
-                else if(parameter.Equals(CSocket.ACK_FUNCTION))
+                else if (parameter.Equals(CSocket.ACK_FUNCTION))
                 {
                     LogClass.Log("ack bejbi");
                     acked = true;
@@ -322,7 +341,7 @@ namespace Subnetwork
             }
         }
 
-        private static void ProcessConnectInformations(CSocket connectedSocket)
+        private static void ProcessConnectInformation(CSocket connectedSocket)
         {
             Tuple<string, object> received = connectedSocket.ReceiveObject();
             Dictionary<string, string> receivedInformation = (Dictionary<string, string>)received.Item2;

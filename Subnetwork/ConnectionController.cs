@@ -122,8 +122,9 @@ namespace Subnetwork
 
         public bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
+            LogClass.Log("[DEBUG] incoming connectionrequest from" + pathBegin + " to " + pathEnd);
             string PathEndAddressFromDifferentDomain = null;
-
+            string[] existingConnKey = new string[] { pathBegin, pathEnd };
             //Lista SNP dla tworzonego aktualnie polaczenia
             List<SNP> SNPList = new List<SNP>();
 
@@ -180,7 +181,7 @@ namespace Subnetwork
                 }
 
                 //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
-                existingConnections.Add(new string[] { pathBegin, pathEnd }, SNPList);
+                existingConnections.Add(existingConnKey, SNPList);
 
                 //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
 
@@ -250,7 +251,7 @@ namespace Subnetwork
         public bool DeleteConnection(string pathBegin, string pathEnd)
         {
             List<SNP> SNPList = null;
-
+            LogClass.Log("[DEBUG] deleting connection between" + pathBegin + " to " + pathEnd);
             //new string[] { pathBegin, pathEnd }
             foreach (string[] key in existingConnections.Keys)
             {
@@ -331,6 +332,7 @@ namespace Subnetwork
 
         public bool DeleteConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
+            LogClass.Log("[DEBUG] sending delete connection request out between " + pathBegin.Address + " and " + pathEnd.Address);
             //wysyla do cc poziom niżej wiadomosc usuwaj jak szalony konik
             IPAddress subnetworkAddress = null;
             IPAddress subnetworkAddressMask = null;
@@ -344,12 +346,13 @@ namespace Subnetwork
                 }
             }
             SubnetworkAddress subnetAddress = new SubnetworkAddress(subnetworkAddress.ToString(), subnetworkAddressMask.ToString());
-            SubnetworkServer.SendDeleteConnectionRequest(pathBegin.Address, pathEnd.Address, subnetAddress);
+            SubnetworkServer.SendConnectionRequest(pathBegin, pathEnd, subnetAddress);
             return true;
         }
 
         public bool ConnectionRequestFromCC(SNP pathBegin, SNP pathEnd)
         {
+            LogClass.Log("[DEBUG] incoming connectionrequestfromCC set bewtween" + pathBegin.Address + " to " + pathEnd.Address);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd.Address, pathBegin.OccupiedCapacity);
 
             //Lista SNP dla tworzonego aktualnie polaczenia
@@ -410,6 +413,7 @@ namespace Subnetwork
 
         private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
+            LogClass.Log("[DEBUG] sending connectionrequestout between " + pathBegin.Address + " to " + pathEnd.Address);
             //wysyla do cc poziom niżej wiadomosc connection request
             IPAddress subnetworkAddress = null;
             IPAddress subnetworkAddressMask = null;
@@ -428,7 +432,15 @@ namespace Subnetwork
 
         public bool DeletePeerCoordinationIn(SNP pathBegin, string pathEnd)
         {
-            List<SNP> SNPList = existingConnections[new string[] { pathBegin.Address, pathEnd }];
+            LogClass.Log("[DEBUG] incoming deletepeercoordination from" + pathBegin.Address + " to " + pathEnd);
+            List<SNP> SNPList = null;
+            foreach (string[] key in existingConnections.Keys)
+            {
+                if ((key[0] == pathBegin.Address && key[1] == pathEnd) || (key[1] == pathBegin.Address && key[0] == pathEnd))
+                {
+                    SNPList = existingConnections[key];
+                }
+            }
 
             //w kazdym SNP ustaw "deleting" na true
             SNPList.ForEach(x => x.Deleting = true);
@@ -453,7 +465,7 @@ namespace Subnetwork
                     {
                         if (DeleteConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
-                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd + " successful.");
+                            LogClass.Log("Deleting " + SNPpathBegin.Address + " - " + SNPpathEnd.Address + " successful.");
                         }
                         else
                         {
@@ -470,6 +482,8 @@ namespace Subnetwork
 
         public bool PeerCoordinationIn(SNP pathBegin, string pathEnd)
         {
+            LogClass.Log("[DEBUG] incoming peercoordination from" + pathBegin.Address + " to " + pathEnd);
+            string[] existingConnKey = new string[] { pathBegin.Address, pathEnd };
             string beginAddressForDict = pathBegin.Address;
             //Lista SNP dla tworzonego aktualnie polaczenia
             List<SNP> SNPList = new List<SNP>();
@@ -481,17 +495,18 @@ namespace Subnetwork
                 {
                     Tuple<IPAddress, IPAddress> foundTranslation = OtherDomainSNPPAddressTranslation[domainAddress].Find(x => x.Item1.ToString() == pathBegin.Address);
                     IPAddress translatedAddress = foundTranslation.Item2;
+                    Console.WriteLine("TRANSALATED FROM" + pathBegin.Address + " TO " + translatedAddress.ToString());
                     pathBegin.Address = translatedAddress.ToString();
                 }
             }
-
+            Console.WriteLine("DEFENITELY TRANSALATED TO " + pathBegin.Address);
             //przepustowosc bierzemy z przekazanego SNP
 
-            SNPList.Add(new SNP(pathBegin.Label, pathBegin.Address, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
+            SNPList.Add(new SNP(pathBegin.Label, pathBegin.Address, pathBegin.OccupiedCapacity, null, null));
             SNPList.Add(new SNP(0, pathEnd, pathBegin.OccupiedCapacity, pathBegin.PathBegin, pathBegin.PathEnd));
 
             //Zapamietaj SNPlist z polaczeniem mdzy takimi adresami
-            existingConnections.Add(new string[] { beginAddressForDict, pathEnd }, SNPList);
+            existingConnections.Add(existingConnKey, SNPList);
 
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd, pathBegin.OccupiedCapacity);
 
@@ -533,11 +548,13 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
+            LogClass.Log("[DEBUG] sending peer coordination: " + SNPpathBegin.Address + " to " + AddressPathEnd);
             return SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
         }
 
         private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
         {
+            LogClass.Log("[DEBUG] sending delete peer coordination: " + lastSNPinThisDomain.Address + " to " + pathEndAddressFromDifferentDomain);
             return SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
         }
     }
