@@ -70,6 +70,7 @@ namespace Subnetwork
             if (delete)
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
+
                 LogClass.GreenLog("[RC]Received Topology: Added " + localTopologyUpdate.OccupiedCapacity + "Mbit/s to SNPP " + localTopologyUpdate.Address + ".");
             }
             else
@@ -77,6 +78,7 @@ namespace Subnetwork
                 snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
                 LogClass.MagentaLog("[RC]Received Topology: Removed " + localTopologyUpdate.OccupiedCapacity + "Mbit/s from SNPP " + localTopologyUpdate.Address + ".");
             }
+            LogClass.WhiteLog("[RC] " + snpp.Capacity + "Mbit/s left on " + snpp.Address);
         }
 
 
