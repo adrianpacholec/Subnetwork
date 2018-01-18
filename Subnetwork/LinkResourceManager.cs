@@ -146,6 +146,7 @@ namespace Subnetwork
                 SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Address == SNPpathBegin.Address);
                 SNPsbySNPPaddress[SNPpathBegin.Address].Remove(BeginToBeDeleted);
                 Topology(SNPpathBegin);
+                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: deallocate " + SNPpathBegin.OccupiedCapacity + "Mbit/s on " + SNPpathBegin.Address);
             }
 
             if (SNPsbySNPPaddress.ContainsKey(SNPpathEnd.Address))
@@ -153,6 +154,8 @@ namespace Subnetwork
                 SNP EndToBeDeleted = SNPsbySNPPaddress[SNPpathEnd.Address].Find(x => x.Address == SNPpathEnd.Address);
                 SNPsbySNPPaddress[SNPpathEnd.Address].Remove(EndToBeDeleted);
                 Topology(SNPpathEnd);
+                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: deallocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
+
             }
         }
 
@@ -179,6 +182,7 @@ namespace Subnetwork
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(potentiallyNewLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
+            CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate "+ SNPpathBegin.OccupiedCapacity + "Mbit/s on "+SNPpathBegin.Address);
             Topology(SNPpathBegin);
 
             if (pathBegin.Address != pathEnd.Address)
@@ -186,6 +190,7 @@ namespace Subnetwork
                 //tworzenie SNP koncowego SNPP
                 SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
                 SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
+                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
                 Topology(SNPpathEnd);
 
                 SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);
