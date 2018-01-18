@@ -287,7 +287,7 @@ namespace Subnetwork
                     int capacity = parameters.getCapacity();
                     LogClass.Log("Received CONNECTION REQUEST from NCC.");
                     bool success = connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
-                    String parentSubnetworkAddress = Config.getProperty("ParentSubnetworkAddress");
+                    String parentSubnetworkAddress = "127.0.0.1";
                     CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
                     SendACKorNACK(success, c);
 
@@ -322,11 +322,14 @@ namespace Subnetwork
                 }
                 else if (parameter.Equals(CALL_TEARDOWN))
                 {
-                    Tuple<string, string> pathToDeallocate = (Tuple<string, string>)received.Item2;
-                    string pathBegin = pathToDeallocate.Item1;
-                    string pathEnd = pathToDeallocate.Item2;
-                    LogClass.Log("Received TEARDOWN to deallocate connection between " + pathBegin + " and " + pathEnd);
-                    //bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
+                    MessageParameters parameters = (MessageParameters)receivedObject;
+                    String sourceIP = parameters.getFirstParameter();
+                    String destinationIP = parameters.getSecondParameter();
+                    LogClass.Log("Received TEARDOWN to deallocate connection between " + sourceIP + " and " + destinationIP);
+                    bool success = connectionController.DeleteConnection(sourceIP, destinationIP);
+                    String parentSubnetworkAddress = "127.0.0.1";
+                    CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
+                    SendACKorNACK(success, c);
                 }
                 else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
                 {
