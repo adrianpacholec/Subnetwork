@@ -34,7 +34,7 @@ namespace Subnetwork
 
         public void LoadLinks()
         {
-            CustomSocket.LogClass.Log("loading links in subnetwork:");
+            CustomSocket.LogClass.WhiteLog("Loading links in subnetwork:");
             string fileName = Config.getProperty("subnetworkLinks");
             string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
@@ -57,7 +57,7 @@ namespace Subnetwork
                 Links.Add(new Link(firstSNPP, secondSNPP));
                 myEdgeSNPPs.Add(firstSNPP);
                 myEdgeSNPPs.Add(secondSNPP);
-                Console.WriteLine(str);
+                CustomSocket.LogClass.Log(str);
             }
         }
 

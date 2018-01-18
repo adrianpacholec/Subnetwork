@@ -47,12 +47,12 @@ namespace Subnetwork
             if (delete)
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("[RC] Removed " + localTopologyUpdate.OccupiedCapacity + " from SNPP " + localTopologyUpdate.Address + ".");
+                LogClass.GreenLog("[RC] Added " + localTopologyUpdate.OccupiedCapacity + "Mbit/s to SNPP " + localTopologyUpdate.Address + ".");
             }
             else
             {
                 snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("[RC] Added " + localTopologyUpdate.OccupiedCapacity + " to SNPP " + localTopologyUpdate.Address + ".");
+                LogClass.MagentaLog("[RC] Removed " + localTopologyUpdate.OccupiedCapacity + "Mbit/s from SNPP " + localTopologyUpdate.Address + ".");
             }
         }
 

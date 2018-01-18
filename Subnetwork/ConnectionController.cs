@@ -35,6 +35,7 @@ namespace Subnetwork
             SubnetworkAddress = Config.getProperty("SubnetworkAddress");
             SubnetworkMask = Config.getProperty("SubnetworkMask");
 
+            LogClass.WhiteLog("INITIALIZATION");
             OtherDomainSNPPAddressTranslation = new Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
             existingConnections = new Dictionary<string[], List<SNP>>();
             ContainedSubnetworksAddresses = new List<SubnetworkAddress>();
@@ -66,7 +67,7 @@ namespace Subnetwork
 
         public void LoadContainedSubnetworks()
         {
-            LogClass.Log("loading contained subnetworks.");
+            LogClass.WhiteLog("Loading contained subnetworks:");
             string fileName = Config.getProperty("ContainedSubnetworks");
             string[] loadedFile = LoadFile(fileName);
             string[] subnetworkParams = null;
@@ -90,10 +91,11 @@ namespace Subnetwork
 
             foreach (var entry in existingConnections)
             {
-                if (entry.Value.Find(x => x.Address == SNPaddress) != null) {
+                if (entry.Value.Find(x => x.Address == SNPaddress) != null)
+                {
                     pathList.Add(new Tuple<string, string, int>(entry.Key[0], entry.Key[1], entry.Value[0].OccupiedCapacity));
                 }
-            }      
+            }
             return pathList;
         }
 
@@ -122,7 +124,6 @@ namespace Subnetwork
 
         public bool ConnectionRequestFromNCC(string pathBegin, string pathEnd, int capacity)
         {
-            LogClass.Log("[DEBUG] incoming connectionrequest from" + pathBegin + " to " + pathEnd);
             string PathEndAddressFromDifferentDomain = null;
             string[] existingConnKey = new string[] { pathBegin, pathEnd };
             //Lista SNP dla tworzonego aktualnie polaczenia
@@ -152,7 +153,7 @@ namespace Subnetwork
                 }
             }
 
-            LogClass.Log("RouteTableQuery called between: " + pathBegin + " and: " + pathEnd);
+            LogClass.WhiteLog("[CC] RouteTableQuery called between: " + pathBegin + " and: " + pathEnd);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin, pathEnd, capacity);
             if (SNPPList.Count > 0)
             {
@@ -352,7 +353,6 @@ namespace Subnetwork
 
         public bool ConnectionRequestFromCC(SNP pathBegin, SNP pathEnd)
         {
-            LogClass.Log("[DEBUG] incoming connectionrequestfromCC set bewtween" + pathBegin.Address + " to " + pathEnd.Address);
             List<SNPP> SNPPList = RouteTableQuery(pathBegin.Address, pathEnd.Address, pathBegin.OccupiedCapacity);
 
             //Lista SNP dla tworzonego aktualnie polaczenia
@@ -413,7 +413,7 @@ namespace Subnetwork
 
         private bool ConnectionRequestOut(SNP pathBegin, SNP pathEnd)
         {
-            LogClass.Log("[DEBUG] sending connectionrequestout between " + pathBegin.Address + " to " + pathEnd.Address);
+            LogClass.WhiteLog("[CC] Sending ConnectionRequestOut between ports: " + pathBegin.Address + " and " + pathEnd.Address);
             //wysyla do cc poziom niżej wiadomosc connection request
             IPAddress subnetworkAddress = null;
             IPAddress subnetworkAddressMask = null;
@@ -530,15 +530,9 @@ namespace Subnetwork
 
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
-                        {
-                            LogClass.Log("Subnetwork Connection set properly.");
-                        }
-                        else
-                        {
-                            LogClass.Log("Epic fail.");
+                        if (!ConnectionRequestOut(SNPpathBegin, SNPpathEnd))            
                             return false;
-                        }
+
                     }
                 }
             }
@@ -548,13 +542,13 @@ namespace Subnetwork
 
         private bool PeerCoordinationOut(SNP SNPpathBegin, string AddressPathEnd)
         {
-            LogClass.Log("[DEBUG] sending peer coordination: " + SNPpathBegin.Address + " to " + AddressPathEnd);
+            LogClass.WhiteLog("[CC] Sending peerCoordination: " + SNPpathBegin.Address + " to " + AddressPathEnd);
             return SubnetworkServer.SendPeerCoordination(SNPpathBegin, AddressPathEnd, true);
         }
 
         private bool DeletePeerCoordinationOut(SNP lastSNPinThisDomain, string pathEndAddressFromDifferentDomain)
         {
-            LogClass.Log("[DEBUG] sending delete peer coordination: " + lastSNPinThisDomain.Address + " to " + pathEndAddressFromDifferentDomain);
+            LogClass.WhiteLog("[CC] Sending deletePeerCoordination: " + lastSNPinThisDomain.Address + " to " + pathEndAddressFromDifferentDomain);
             return SubnetworkServer.SendPeerCoordination(lastSNPinThisDomain, pathEndAddressFromDifferentDomain, false);
         }
     }

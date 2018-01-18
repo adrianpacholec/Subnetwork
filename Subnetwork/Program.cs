@@ -31,11 +31,10 @@ namespace Subnetwork
                 decision = Console.ReadLine().Trim();
                 if (decision.StartsWith("kill"))
                 {
-                    Console.WriteLine("killing spree!!!");
                     string[] killParams = decision.Split(' ');
                     string firstSNPaddress = killParams[1];
                     string secondSNPaddress = killParams[2];
-
+                    CustomSocket.LogClass.MagentaLog("Removing link: " + firstSNPaddress + " - " + secondSNPaddress);
                    
                     List<Tuple<string,string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress);
                     foreach (var path in pathsToReroute) {
