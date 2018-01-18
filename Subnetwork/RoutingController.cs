@@ -56,7 +56,7 @@ namespace Subnetwork
             Link linkToBeDeleted = links.Find(x => (x.FirstSNPP.Address == begin && x.SecondSNPP.Address == end));
             deletedLinks.Add(linkToBeDeleted);
             links.Remove(linkToBeDeleted);
-            LogClass.Log("Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
+            LogClass.Log("[RC] Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
         }
 
         public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
@@ -70,12 +70,12 @@ namespace Subnetwork
             if (delete)
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("LocalTopology: Removed SNP:" + localTopologyUpdate.Address + ".");
+                LogClass.GreenLog("[RC]Received Topology: Added " + localTopologyUpdate.OccupiedCapacity + "Mbit/s to SNPP " + localTopologyUpdate.Address + ".");
             }
             else
             {
                 snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("LocalTopology: Added SNP:" + localTopologyUpdate.Address + ".");
+                LogClass.MagentaLog("[RC]Received Topology: Removed " + localTopologyUpdate.OccupiedCapacity + "Mbit/s from SNPP " + localTopologyUpdate.Address + ".");
             }
         }
 

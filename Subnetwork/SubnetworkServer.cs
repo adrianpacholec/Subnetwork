@@ -27,7 +27,6 @@ namespace Subnetwork
         public const int SUBNETWORK_MASK_POSITION = 1;
         public const int PORT_POSITION = 2;
 
-
         private static ConnectionController connectionController;
         private static RoutingController routingController;
         private static LinkResourceManager linkResourceManager;
@@ -77,7 +76,7 @@ namespace Subnetwork
             string fileName = Config.getProperty("realPortsToDomains");
             string[] loadedFile = LoadFile(fileName);
             string[] parameters = null;
-            LogClass.Log("loaded ports to another domains");
+            LogClass.WhiteLog("Loaded ports to another domains.");
 
             foreach (string str in loadedFile)
             {
@@ -98,24 +97,32 @@ namespace Subnetwork
         public static bool SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
-                childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
+                if (pathBegin.Deleting)
+                    childSubSocket.SendObject(DELETE_CONNECTION_REQUEST, connTuple);
+                else
+                    childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
 
                 while (!(acked || nacked))
                     Thread.Sleep(30);
 
                 if (acked)
                 {
-                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "set connection between:" + pathBegin.Address + " and " + pathEnd.Address);
+                    if (pathBegin.Deleting)
+                        LogClass.MagentaLog("Subnetwork " + subnetworkAddress.subnetAddress + " deleted connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                    else
+                        LogClass.GreenLog("Subnetwork " + subnetworkAddress.subnetAddress + " set connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     acked = false;
                     return true;
                 }
                 else if (nacked)
                 {
-                    LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "can't set up the connection between:" + pathBegin.Address + " and " + pathEnd.Address);
+                    if (pathBegin.Deleting)
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't delete the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                    else
+                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't set up the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     nacked = false;
                     return false;
                 }
@@ -150,10 +157,6 @@ namespace Subnetwork
         public static bool SendPeerCoordination(SNP SNPpathBegin, string AddressPathEnd, bool val)
 
         {
-            //zakładam, że serwer subnetworka z drugiej domeny podepnie się analogicznie 
-            //jak serwer podsieci w tej domenie i zostanie zapamiętany jego socket w słowniku.
-            //i teraz dam tak, że w słoniku po tym adresie on wyszuka ten socket, potem się to zmieni
-
             Tuple<SNP, string> peerTuple = new Tuple<SNP, string>(SNPpathBegin, AddressPathEnd);
             CSocket otherDomainSocket = GetSocketToDomain(AddressPathEnd);
             if (val)
@@ -162,7 +165,10 @@ namespace Subnetwork
                 otherDomainSocket.SendObject(PEER_COORDINATION, peerTuple);
             }
             else
+            {
+                otherDomainSocket.SendObject(null, new Dictionary<string, string>());
                 otherDomainSocket.SendObject(DELETE_PEER_COORDINATION, peerTuple);
+            }
             string response = otherDomainSocket.ReceiveObject().Item1;
             //otherDomainSocket.Close();
             if (response.Equals(CSocket.ACK_FUNCTION))
@@ -232,7 +238,7 @@ namespace Subnetwork
 
         private static Thread InitListenThread()
         {
-            LogClass.Log("Listening for subnetwork connections");
+            LogClass.WhiteLog("LISTENING FOR SUBNETWORKS");
             var t = new Thread(() => RealStart());
             t.IsBackground = true;
             t.Start();
@@ -244,7 +250,6 @@ namespace Subnetwork
             while (true)
             {
                 connected = listeningSocket.Accept();
-                LogClass.Log("Connected.");
                 WaitForInputFromSocketInAnotherThread(connected);
             }
 
@@ -259,7 +264,7 @@ namespace Subnetwork
         private static void WaitForInput(CSocket connected)
         {
             if (!connected.Equals(toParentSocket))
-                ProcessConnectInformations(connected);
+                ProcessConnectInformation(connected);
             while (true)
             {
                 Tuple<String, Object> received = connected.ReceiveObject();
@@ -275,17 +280,25 @@ namespace Subnetwork
                     String sourceIP = parameters.getFirstParameter();
                     String destinationIP = parameters.getSecondParameter();
                     int capacity = parameters.getCapacity();
-                    LogClass.Log("Received CONNECTION REQUEST from NCC.");
+                    LogClass.CyanLog("Received CONNECTION REQUEST from NCC.");
                     bool success = connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
-                    SendACKorNACK(success, connected);
-
+                    //String parentSubnetworkAddress = Config.getProperty("ParentSubnetworkAddress");
+                    //CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
+                    //SendACKorNACK(success, c);
 
                 }
                 else if (parameter.Equals(PEER_COORDINATION))
                 {
                     Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
-                    LogClass.Log("Received PEER COORDINATION from AS 1");
+                    LogClass.CyanLog("Received PEER COORDINATION from AS 1");
                     bool success = connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                    SendACKorNACK(success, connected);
+                }
+                else if (parameter.Equals(DELETE_PEER_COORDINATION))
+                {
+                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
+                    LogClass.CyanLog("Received DELETE PEER COORDINATION from AS 1");
+                    bool success = connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
                     SendACKorNACK(success, connected);
                 }
                 else if (parameter.Equals(NETWORK_TOPOLOGY))
@@ -297,7 +310,7 @@ namespace Subnetwork
                     Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
                     SNP first = pathToAssign.Item1;
                     SNP second = pathToAssign.Item2;
-                    LogClass.Log("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
+                    LogClass.CyanLog("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
                     bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
                     SendACKorNACK(response, connected);
 
@@ -307,31 +320,32 @@ namespace Subnetwork
                     Tuple<string, string> pathToDeallocate = (Tuple<string, string>)received.Item2;
                     string pathBegin = pathToDeallocate.Item1;
                     string pathEnd = pathToDeallocate.Item2;
-                    LogClass.Log("Received TEARDOWN to deallocate connection between " + pathBegin + " and " + pathEnd);
+                    LogClass.CyanLog("Received TEARDOWN to deallocate connection between " + pathBegin + " and " + pathEnd);
                     //bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
                 }
                 else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
                 {
-                    Tuple<string, string> pathToDelete = (Tuple<string, string>)received.Item2;
-                    string pathBegin = pathToDelete.Item1;
-                    string pathEnd = pathToDelete.Item2;
-                    LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
+                    Tuple<SNP, SNP> pathToDelete = (Tuple<SNP, SNP>)received.Item2;
+                    string pathBegin = pathToDelete.Item1.Address;
+                    string pathEnd = pathToDelete.Item2.Address;
+                    LogClass.CyanLog("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
                     bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
+                    SendACKorNACK(success, connected);
                 }
                 else if (parameter.Equals(CSocket.ACK_FUNCTION))
                 {
-                    LogClass.Log("ack bejbi");
+                    LogClass.CyanLog("Received ACK");
                     acked = true;
                 }
                 else if (parameter.Equals(CSocket.NACK_FUNCTION))
                 {
-                    LogClass.Log("CHUYJ");
+                    LogClass.CyanLog("Received NACK");
                     nacked = true;
                 }
             }
         }
 
-        private static void ProcessConnectInformations(CSocket connectedSocket)
+        private static void ProcessConnectInformation(CSocket connectedSocket)
         {
             Tuple<string, object> received = connectedSocket.ReceiveObject();
             Dictionary<string, string> receivedInformation = (Dictionary<string, string>)received.Item2;
@@ -345,7 +359,7 @@ namespace Subnetwork
                 String operatedSubnetworkMask = receivedInformation[OPERATED_SUBNETWORK_MASK];
                 SubnetworkAddress connectedSubnetAddress = new SubnetworkAddress(operatedSubnetwork, operatedSubnetworkMask);
                 SocketsByAddress.Add(connectedSubnetAddress, connectedSocket);
-                LogClass.Log("Subnetwork " + operatedSubnetwork + " connected");
+                LogClass.Log("Subnetwork " + operatedSubnetwork + " connected.");
             }
         }
 
