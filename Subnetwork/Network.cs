@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CustomSocket;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -173,6 +174,7 @@ namespace Subnetwork
             }
             catch (System.FormatException e)
             {
+                LogClass.WhiteLog("[RC] Can't find path with this capacity");
                 PathList.Remove(createdPath);
             }
         }

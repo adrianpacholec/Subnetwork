@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CustomSocket;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -62,7 +63,9 @@ namespace Subnetwork
             }
             catch (FormatException e)
             {
+                LogClass.WhiteLog("[RC] Can't find path with this capacity");
                 return new List<SNPP>();
+                
             }           
             return translated;
         }

@@ -379,25 +379,27 @@ namespace Subnetwork
                 for (int jndex = index + 1; jndex < SNPList.Count; jndex++)
                 {
                     SNP SNPpathEnd = SNPList[jndex];
-
-                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        connected.Add(SNPpathBegin);
-                        connected.Add(SNPpathEnd);
-                        LogClass.Log("Subnetwork Connection set properly.");
-                    }
-                    else
-                    {
-                        SNPList.ForEach(x => x.Deleting = true);
-                        for (int i = 0; i < SNPList.Count; i += 2)
-                            DeleteLinkConnectionRequest(SNPList.ElementAt(i), SNPList.ElementAt(i + 1));
-                        for (int i = 0; i < connected.Count; i += 2)
-                            ConnectionRequestOut(connected.ElementAt(i), connected.ElementAt(i + 1));
-                        SubnetworkServer.callIgnoreLinkInRC(SNPpathBegin);
-                        SubnetworkServer.callIgnoreLinkInRC(SNPpathEnd);
+                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
+                        {
+                            connected.Add(SNPpathBegin);
+                            connected.Add(SNPpathEnd);
+                            LogClass.Log("Subnetwork Connection set properly.");
+                        }
+                        else
+                        {
+                            connected.ForEach(x => x.Deleting = true);
+                            for (int i = 0; i < connected.Count; i += 2)
+                                DeleteLinkConnectionRequest(connected.ElementAt(i), connected.ElementAt(i + 1));
+                            for (int i = 0; i < connected.Count; i += 2)
+                                ConnectionRequestOut(connected.ElementAt(i), connected.ElementAt(i + 1));
+                            SubnetworkServer.callIgnoreLinkInRC(SNPpathBegin);
+                            SubnetworkServer.callIgnoreLinkInRC(SNPpathEnd);
 
-                        LogClass.Log("Epic fail.");
-                        return false;
+                            LogClass.Log("Epic fail.");
+                            return false;
+                        }
                     }
                 }
             }
@@ -535,6 +537,7 @@ namespace Subnetwork
 
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
+                        LogClass.WhiteLog("[DEBUG] Sending ConnectionRequest between" + SNPpathBegin.Address+SNPpathEnd.Deleting + "and" + SNPpathEnd.Address+SNPpathBegin.Deleting);
                         if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
                             connected.Add(SNPpathBegin);
@@ -543,11 +546,19 @@ namespace Subnetwork
                         }
                         else
                         {
-                            SNPList.ForEach(x => x.Deleting = true);
-                            for (int i = 0; i < SNPList.Count; i += 2)
-                                DeleteLinkConnectionRequest(SNPList.ElementAt(i), SNPList.ElementAt(i + 1));
+                            connected.ForEach(x => x.Deleting = true);
                             for (int i = 0; i < connected.Count; i += 2)
+                            {
+                                DeleteLinkConnectionRequest(connected.ElementAt(i), connected.ElementAt(i + 1));
+
+                            }
+
+                            for (int i = 0; i < connected.Count; i += 2)
+                            {
                                 ConnectionRequestOut(connected.ElementAt(i), connected.ElementAt(i + 1));
+                                LogClass.WhiteLog("[DEBUG] Sending DeleteConnectionRequest between" + SNPpathBegin.Address + SNPpathEnd.Deleting + "and" + SNPpathEnd.Address + SNPpathBegin.Deleting);
+
+                            }
                             SubnetworkServer.callIgnoreLinkInRC(SNPpathBegin);
                             SubnetworkServer.callIgnoreLinkInRC(SNPpathEnd);
 
