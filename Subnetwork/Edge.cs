@@ -16,6 +16,7 @@ namespace Subnetwork
         public Vertex startVertex { get; private set; }
         public Vertex endVertex { get; private set; }
         public bool isDirected { get; }
+        public bool ignore;
 
         public Edge()
         {
@@ -28,7 +29,7 @@ namespace Subnetwork
             countEdge = 0;
         }
 
-        public Edge(int idstart, int idend, int weight,int capacity, Vertex v1, Vertex v2, bool directing)
+        public Edge(int idstart, int idend, int weight,int capacity, Vertex v1, Vertex v2, bool directing, bool ignore)
         {
             
             id=++countEdge;
@@ -37,6 +38,7 @@ namespace Subnetwork
             this.weight = weight;
             isDirected = directing;
             this.capacity = capacity;
+            this.ignore = ignore;
 
         }
         public int getid()

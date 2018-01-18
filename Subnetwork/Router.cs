@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CustomSocket;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -52,11 +53,20 @@ namespace Subnetwork
             SubnetworkAddress destination = findSubnetworkWhereIsContained(destinationAddress);
             int sourceVertexId = subnetworkToVertexId[source];
             int destinationVertexId = subnetworkToVertexId[destination];
-            if (!(sourceVertexId == destinationVertexId))
+            try
             {
-                edges = subnetwork.getPath(sourceVertexId, destinationVertexId);
-                translated = translateEdgesToSNPPs(edges);
+                if (!(sourceVertexId == destinationVertexId))
+                {
+                    edges = subnetwork.getPath(sourceVertexId, destinationVertexId);
+                    translated = translateEdgesToSNPPs(edges);
+                }
             }
+            catch (FormatException e)
+            {
+                LogClass.WhiteLog("[RC] Can't find path with this capacity");
+                return new List<SNPP>();
+                
+            }           
             return translated;
         }
 
@@ -128,7 +138,7 @@ namespace Subnetwork
                 int firstVertexId = subnetworkToVertexId[firstSubnetworkAddress];
                 int secondVertexId = subnetworkToVertexId[secondSubnetworkAddress];
                 int capacity = link.FirstSNPP.Capacity;
-                subnetwork.addEdge(firstVertexId, secondVertexId, capacity);
+                subnetwork.addEdge(firstVertexId, secondVertexId, capacity, link.ignore);
                 counter++;
             }
         }
