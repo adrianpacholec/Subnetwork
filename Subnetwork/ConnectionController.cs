@@ -83,15 +83,28 @@ namespace Subnetwork
             return fileLines;
         }
 
-        public List<Tuple<string, string, int>> GetPathsContainingThisSNP(string SNPaddress)
+        public List<Tuple<string, string, int>> GetPathsContainingThisSNP(string SNPaddress1, string SNPaddress2)
         {
             List<Tuple<string, string, int>> pathList = new List<Tuple<string, string, int>>();
-
+            List<SNP> deleteLater = new List<SNP>();
             foreach (var entry in existingConnections)
             {
-                if (entry.Value.Find(x => x.Address == SNPaddress) != null)
+                if (entry.Value.Find(x => x.Address == SNPaddress1) != null)
                 {
                     pathList.Add(new Tuple<string, string, int>(entry.Key[0], entry.Key[1], entry.Value[0].OccupiedCapacity));
+                    deleteLater.Add(entry.Value.Find(x => x.Address == SNPaddress1));
+                }
+                if (entry.Value.Find(x => x.Address == SNPaddress2) != null)
+                {
+                    deleteLater.Add(entry.Value.Find(x => x.Address == SNPaddress2));
+                }
+            }
+
+            foreach (SNP delete in deleteLater)
+            {
+                foreach (List<SNP> list in existingConnections.Values)
+                {
+                    list.Remove(delete);
                 }
             }
             return pathList;
@@ -270,6 +283,7 @@ namespace Subnetwork
             {
                 SNP SNPpathBegin = SNPList[index];
                 SNP SNPpathEnd = SNPList[index + 1];
+                LogClass.Log("[DEBUG] sending deletelink connecion request: " + SNPpathBegin.Address + " to " + SNPpathEnd.Address);
                 DeleteLinkConnectionRequest(SNPpathBegin, SNPpathEnd);
             }
 
@@ -537,7 +551,7 @@ namespace Subnetwork
 
                     if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
                     {
-                        LogClass.WhiteLog("[DEBUG] Sending ConnectionRequest between" + SNPpathBegin.Address+SNPpathEnd.Deleting + "and" + SNPpathEnd.Address+SNPpathBegin.Deleting);
+                        LogClass.WhiteLog("[DEBUG] Sending ConnectionRequest between" + SNPpathBegin.Address + SNPpathEnd.Deleting + "and" + SNPpathEnd.Address + SNPpathBegin.Deleting);
                         if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
                             connected.Add(SNPpathBegin);

@@ -43,9 +43,10 @@ namespace Subnetwork
         {
             try
             {
-                List<SNPP> scheduled = router.route(pathBegin, pathEnd, capacity);
+                List<SNPP> scheduled = router.Route(pathBegin, pathEnd, capacity);
                 return scheduled;
-            }catch(System.FormatException e)
+            }
+            catch (System.FormatException e)
             {
                 return new List<SNPP>();
             }
@@ -54,19 +55,32 @@ namespace Subnetwork
         public void DeleteLink(string begin, string end)
         {
             Link linkToBeDeleted = links.Find(x => (x.FirstSNPP.Address == begin && x.SecondSNPP.Address == end));
-            deletedLinks.Add(linkToBeDeleted);
-            links.Remove(linkToBeDeleted);
-            LogClass.Log("[RC] Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
+            if (linkToBeDeleted != null)
+            {
+                deletedLinks.Add(linkToBeDeleted);
+                links.Remove(linkToBeDeleted);
+                LogClass.MagentaLog("[RC] Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
+            }
         }
 
         public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
-            Link link = links.Find(x => x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address==localTopologyUpdate.Address);
+            foreach (Link polaczenie in links) { Console.WriteLine(polaczenie.FirstSNPP.Address + " " + polaczenie.SecondSNPP.Address); }
+            if (localTopologyUpdate.Address == null)
+                Console.WriteLine("no i huj");
+            else Console.WriteLine("localtopolgyAddress = " + localTopologyUpdate.Address);
+
+            Link link = links.Find(x => x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address == localTopologyUpdate.Address);
+            if (link != null) Console.WriteLine("jest ok");
+            Console.WriteLine("ZNALAZLEM: " + link.FirstSNPP.Address + link.SecondSNPP.Address);
             SNPP snpp = null;
+
             if (link.FirstSNPP.Address == localTopologyUpdate.Address)
                 snpp = link.FirstSNPP;
             else
                 snpp = link.SecondSNPP;
+
+
             if (delete)
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
@@ -99,7 +113,7 @@ namespace Subnetwork
 
         internal void IgnoreLink(SNP snp)
         {
-            Link link=links.Find(x => (x.FirstSNPP.Address.Equals(snp.Address) || x.SecondSNPP.Address.Equals(snp.Address)));
+            Link link = links.Find(x => (x.FirstSNPP.Address.Equals(snp.Address) || x.SecondSNPP.Address.Equals(snp.Address)));
             link.ignore = true;
         }
     }

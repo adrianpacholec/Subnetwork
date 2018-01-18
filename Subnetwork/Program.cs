@@ -36,8 +36,9 @@ namespace Subnetwork
                     string secondSNPaddress = killParams[2];
                     CustomSocket.LogClass.MagentaLog("Removing link: " + firstSNPaddress + " - " + secondSNPaddress);
                    
-                    List<Tuple<string,string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress);
+                    List<Tuple<string,string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress, secondSNPaddress);
                     foreach (var path in pathsToReroute) {
+                        CustomSocket.LogClass.CyanLog("REMOVING: " + path.Item1 + " " + path.Item2 + " " + path.Item3);
                         CC.DeleteConnection(path.Item1, path.Item2);
                         RC.DeleteLink(firstSNPaddress, secondSNPaddress);
                         CC.ConnectionRequestFromNCC(path.Item1, path.Item2, path.Item3);

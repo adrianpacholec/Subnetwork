@@ -211,8 +211,6 @@ namespace Subnetwork
 
         private void Topology(SNP localTopologyUpdate)
         {
-            //wysyła SNP, które zostało uaktualnione do RC
-            //Wywołanie metody serwera, która jeszcze nie jest zrobiona
             SubnetworkServer.SendTopologyUpdateToRC(localTopologyUpdate.Deleting, localTopologyUpdate);
         }
 

@@ -34,15 +34,15 @@ namespace Subnetwork
             subnetworkToVertexId = new Dictionary<SubnetworkAddress, int>();
             linkAndEdgeIdCorrelation = new Dictionary<Link, int>();
             vertexIdToSubnetwork = new Dictionary<int, SubnetworkAddress>();
-            translateSubnetworksToNodes();
-            translateLinksToEdges();
+            TranslateSubnetworksToNodes();
+            TranslateLinksToEdges();
 
         }
 
-        public List<SNPP> route(IPAddress sourceAddress, IPAddress destinationAddress, int capacity)
+        public List<SNPP> Route(IPAddress sourceAddress, IPAddress destinationAddress, int capacity)
         {
             TranslateSubnetworkData();
-            refreshSubnetwork(capacity);
+            RefreshSubnetwork(capacity);
             List<SNPP> path = new List<SNPP>();
             List<Edge> edges = new List<Edge>();
             List<SNPP> translated = new List<SNPP>();
@@ -58,7 +58,7 @@ namespace Subnetwork
                 if (!(sourceVertexId == destinationVertexId))
                 {
                     edges = subnetwork.getPath(sourceVertexId, destinationVertexId);
-                    translated = translateEdgesToSNPPs(edges);
+                    translated = TranslateEdgesToSNPPs(edges);
                 }
             }
             catch (FormatException e)
@@ -70,14 +70,14 @@ namespace Subnetwork
             return translated;
         }
 
-        private void refreshSubnetwork(int capacity)
+        private void RefreshSubnetwork(int capacity)
         {
             subnetwork.removeLinksWithLowerCapacity(capacity);
             subnetwork.fillAdjacencyMatrix(vertexIdToSubnetwork.Count);
             subnetwork.fillIncidenceMatrix(subnetwork.AdjacencyMatrix);
         }
 
-        private List<SNPP> translateEdgesToSNPPs(List<Edge> edges)
+        private List<SNPP> TranslateEdgesToSNPPs(List<Edge> edges)
         {
             int edgeId;
             SNPP first;
@@ -87,7 +87,7 @@ namespace Subnetwork
             foreach (Edge edge in edges)
             {
                 edgeId = edge.getid();
-                converted = getLinkByEdgeId(edgeId);
+                converted = GetLinkByEdgeId(edgeId);
                 first = converted.FirstSNPP;
                 second = converted.SecondSNPP;
                 translated.Add(first);
@@ -96,7 +96,7 @@ namespace Subnetwork
             return translated;
         }
 
-        private Link getLinkByEdgeId(int edgeId)
+        private Link GetLinkByEdgeId(int edgeId)
         {
             foreach (KeyValuePair<Link, int> entry in linkAndEdgeIdCorrelation)
             {
@@ -106,7 +106,7 @@ namespace Subnetwork
             return null;
         }
 
-        public void translateSubnetworksToNodes()
+        public void TranslateSubnetworksToNodes()
         {
 
             int counter = 1;
@@ -120,7 +120,7 @@ namespace Subnetwork
             }
         }
 
-        public void translateLinksToEdges()
+        public void TranslateLinksToEdges()
         {
             List<Vertex> vertices = subnetwork.VertexList;
             int counter = 1;
