@@ -25,7 +25,6 @@ namespace Subnetwork
         private Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>> OtherDomainSNPPAddressTranslation;
         private Dictionary<string[], List<SNP>> existingConnections;
 
-        private List<Link> linkList;
 
         public ConnectionController()
         {
@@ -38,7 +37,6 @@ namespace Subnetwork
             OtherDomainSNPPAddressTranslation = new Dictionary<SubnetworkAddress, List<Tuple<IPAddress, IPAddress>>>();
             existingConnections = new Dictionary<string[], List<SNP>>();
             ContainedSubnetworksAddresses = new List<SubnetworkAddress>();
-            linkList = new List<Link>();
             LoadContainedSubnetworks();
         }
 
@@ -371,7 +369,7 @@ namespace Subnetwork
             existingConnections.Add(new string[] { pathBegin.Address, pathEnd.Address }, SNPList);
 
             //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
-
+            List<SNP> connected = new List<SNP>();
             for (int index = 0; index < SNPList.Count - 1; index++)
             {
                 SNP SNPpathBegin = SNPList[index];
@@ -379,17 +377,24 @@ namespace Subnetwork
                 {
                     SNP SNPpathEnd = SNPList[jndex];
 
-                    if (BelongsToSubnetwork(SNPpathBegin, SNPpathEnd))
+                    if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                     {
-                        if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
-                        {
-                            LogClass.Log("Subnetwork Connection set properly.");
-                        }
-                        else
-                        {
-                            LogClass.Log("Epic fail.");
-                            return false;
-                        }
+                        connected.Add(SNPpathBegin);
+                        connected.Add(SNPpathEnd);
+                        LogClass.Log("Subnetwork Connection set properly.");
+                    }
+                    else
+                    {
+                        SNPList.ForEach(x => x.Deleting = true);
+                        for (int i = 0; i < SNPList.Count; i += 2)
+                            DeleteLinkConnectionRequest(SNPList.ElementAt(i), SNPList.ElementAt(i + 1));
+                        for (int i = 0; i < connected.Count; i += 2)
+                            ConnectionRequestOut(connected.ElementAt(i), connected.ElementAt(i + 1));
+                        SubnetworkServer.callIgnoreLinkInRC(SNPpathBegin);
+                        SubnetworkServer.callIgnoreLinkInRC(SNPpathEnd);
+
+                        LogClass.Log("Epic fail.");
+                        return false;
                     }
                 }
             }
@@ -505,7 +510,7 @@ namespace Subnetwork
             }
 
             //Wysłanie ConnectionRequesta do podsieci, jeżeli na liscie SNP zajdą się 2 adresy brzegowe tej podsieci
-
+            List<SNP> connected = new List<SNP>();
             for (int index = 0; index < SNPList.Count - 1; index++)
             {
                 SNP SNPpathBegin = SNPList[index];
@@ -517,10 +522,20 @@ namespace Subnetwork
                     {
                         if (ConnectionRequestOut(SNPpathBegin, SNPpathEnd))
                         {
+                            connected.Add(SNPpathBegin);
+                            connected.Add(SNPpathEnd);
                             LogClass.Log("Subnetwork Connection set properly.");
                         }
                         else
                         {
+                            SNPList.ForEach(x => x.Deleting = true);
+                            for (int i = 0; i < SNPList.Count; i += 2)
+                                DeleteLinkConnectionRequest(SNPList.ElementAt(i), SNPList.ElementAt(i + 1));
+                            for (int i = 0; i < connected.Count; i += 2)
+                                ConnectionRequestOut(connected.ElementAt(i), connected.ElementAt(i + 1));
+                            SubnetworkServer.callIgnoreLinkInRC(SNPpathBegin);
+                            SubnetworkServer.callIgnoreLinkInRC(SNPpathEnd);
+
                             LogClass.Log("Epic fail.");
                             return false;
                         }

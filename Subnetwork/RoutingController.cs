@@ -14,6 +14,7 @@ namespace Subnetwork
         Router router;
         private List<SubnetworkAddress> containedSubnetworks;
         private List<Link> links;
+        private List<Link> deletedLinks;
 
         public RoutingController(List<SubnetworkAddress> containedSubnetworks, List<Link> links)
         {
@@ -21,17 +22,39 @@ namespace Subnetwork
             this.links = links;
             SNPPList = new List<SNPP>();
             router = new Router(containedSubnetworks, links);
+            deletedLinks = new List<Link>();
+        }
+
+        public bool RestoreLink(String firstAddress, String secondAddress)
+        {
+            Link toRestore = deletedLinks.Find((x =>
+            ((x.FirstSNPP.Address.Equals(firstAddress) && x.SecondSNPP.Address.Equals(secondAddress))
+            || (x.FirstSNPP.Address.Equals(secondAddress) && x.SecondSNPP.Address.Equals(firstAddress)))));
+            if (toRestore != null)
+            {
+                links.Add(toRestore);
+                return true;
+            }
+            else
+                return false;
         }
 
         public List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
-            List<SNPP> scheduled = router.route(pathBegin, pathEnd, capacity);
-            return scheduled;
+            try
+            {
+                List<SNPP> scheduled = router.route(pathBegin, pathEnd, capacity);
+                return scheduled;
+            }catch(System.FormatException e)
+            {
+                return new List<SNPP>();
+            }
         }
 
         public void DeleteLink(string begin, string end)
         {
             Link linkToBeDeleted = links.Find(x => (x.FirstSNPP.Address == begin && x.SecondSNPP.Address == end));
+            deletedLinks.Add(linkToBeDeleted);
             links.Remove(linkToBeDeleted);
             LogClass.Log("Removed link: " + linkToBeDeleted.FirstSNPP.Address + " - " + linkToBeDeleted.SecondSNPP.Address + " from RC.");
         }
@@ -47,12 +70,12 @@ namespace Subnetwork
             if (delete)
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("Removed " + localTopologyUpdate.Address + ".");
+                LogClass.Log("LocalTopology: Removed SNP:" + localTopologyUpdate.Address + ".");
             }
             else
             {
                 snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
-                LogClass.Log("Added " + localTopologyUpdate.Address + ".");
+                LogClass.Log("LocalTopology: Added SNP:" + localTopologyUpdate.Address + ".");
             }
         }
 
@@ -70,6 +93,12 @@ namespace Subnetwork
         internal void AddSNPP(SNPP snpp)
         {
             throw new NotImplementedException();
+        }
+
+        internal void IgnoreLink(SNP snp)
+        {
+            Link link=links.Find(x => (x.FirstSNPP.Address.Equals(snp.Address) || x.SecondSNPP.Address.Equals(snp.Address)));
+            link.ignore = true;
         }
     }
 }

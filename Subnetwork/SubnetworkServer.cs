@@ -40,7 +40,7 @@ namespace Subnetwork
         private static Dictionary<SubnetworkAddress, int> SocketsToAnotherDomains;
         private static bool acked;
         private static bool nacked;
-                                                                              
+
         public static void init(ConnectionController cc, RoutingController rc, LinkResourceManager lrm)
         {
             connectionController = cc;
@@ -98,12 +98,12 @@ namespace Subnetwork
         public static bool SendConnectionRequest(SNP pathBegin, SNP pathEnd, SubnetworkAddress subnetworkAddress)
         {
             Tuple<SNP, SNP> connTuple = new Tuple<SNP, SNP>(pathBegin, pathEnd);
-            
+
             bool hasValue = SocketsByAddress.TryGetValue(subnetworkAddress, out childSubSocket);
             if (hasValue)
             {
                 childSubSocket.SendObject(CONNECTION_REQUEST_FROM_CC, connTuple);
-             
+
                 while (!(acked || nacked))
                     Thread.Sleep(30);
 
@@ -113,7 +113,7 @@ namespace Subnetwork
                     acked = false;
                     return true;
                 }
-                else if(nacked)
+                else if (nacked)
                 {
                     LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " " + subnetworkAddress.subnetMask + "can't set up the connection between:" + pathBegin.Address + " and " + pathEnd.Address);
                     nacked = false;
@@ -318,7 +318,7 @@ namespace Subnetwork
                     LogClass.Log("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
                     bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
                 }
-                else if(parameter.Equals(CSocket.ACK_FUNCTION))
+                else if (parameter.Equals(CSocket.ACK_FUNCTION))
                 {
                     LogClass.Log("ack bejbi");
                     acked = true;
@@ -368,5 +368,9 @@ namespace Subnetwork
             routingController.LocalTopologyIn(delete, localTopologyUpdate);
         }
 
+        internal static void callIgnoreLinkInRC(SNP snpPathBegin)
+        {
+            routingController.IgnoreLink(snpPathBegin);
+        }
     }
 }
