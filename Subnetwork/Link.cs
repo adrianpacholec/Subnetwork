@@ -10,11 +10,13 @@ namespace Subnetwork
     {
         public SNPP FirstSNPP { get; set; }
         public SNPP SecondSNPP { get; set; }
+        public bool ignore;
 
         public Link(SNPP first, SNPP second)
         {
             FirstSNPP = first;
             SecondSNPP = second;
+            ignore = false;
         }
         
     }

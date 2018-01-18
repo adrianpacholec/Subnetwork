@@ -43,6 +43,13 @@ namespace Subnetwork
                         CC.ConnectionRequestFromNCC(path.Item1, path.Item2, path.Item3);
                     }
                 }
+                else if (decision.StartsWith("restore"))
+                {
+                    string[] restoreParams = decision.Split(' ');
+                    string firstSNPPaddress = restoreParams[1];
+                    string secondSNPPaddress = restoreParams[2];
+                    RC.RestoreLink(firstSNPPaddress, secondSNPPaddress);
+                }
             }
             while (decision != "exit");
         }

@@ -382,5 +382,9 @@ namespace Subnetwork
             routingController.LocalTopologyIn(delete, localTopologyUpdate);
         }
 
+        internal static void callIgnoreLinkInRC(SNP snpPathBegin)
+        {
+            routingController.IgnoreLink(snpPathBegin);
+        }
     }
 }
