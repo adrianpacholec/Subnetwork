@@ -41,14 +41,17 @@ namespace Subnetwork
 
         public List<SNPP> RouteTableQuery(IPAddress pathBegin, IPAddress pathEnd, int capacity)
         {
+            LogClass.WhiteLog("[CC -> RC] RouteTableQuery called between: " + pathBegin + " and: " + pathEnd);
             try
             {
                 List<SNPP> scheduled = router.Route(pathBegin, pathEnd, capacity);
+                LogClass.WhiteLog("[RC -> CC] RouteTableQuery returned SNPP List");
                 return scheduled;
             }
-            catch (System.FormatException e)
+            catch (FormatException e)
             {
-                return new List<SNPP>();
+                LogClass.WhiteLog("[RC -> CC] RouteTableQuery failed to return SNPP List");
+                return null;
             }
         }
 
@@ -63,16 +66,14 @@ namespace Subnetwork
             }
         }
 
+        public void RestoreLinks()
+        {
+            links.ForEach(x => x.ignore = false);
+        }
+
         public void LocalTopologyIn(bool delete, SNP localTopologyUpdate)
         {
-            foreach (Link polaczenie in links) { Console.WriteLine(polaczenie.FirstSNPP.Address + " " + polaczenie.SecondSNPP.Address); }
-            if (localTopologyUpdate.Address == null)
-                Console.WriteLine("no i huj");
-            else Console.WriteLine("localtopolgyAddress = " + localTopologyUpdate.Address);
-
             Link link = links.Find(x => x.FirstSNPP.Address == localTopologyUpdate.Address || x.SecondSNPP.Address == localTopologyUpdate.Address);
-            if (link != null) Console.WriteLine("jest ok");
-            Console.WriteLine("ZNALAZLEM: " + link.FirstSNPP.Address + link.SecondSNPP.Address);
             SNPP snpp = null;
 
             if (link.FirstSNPP.Address == localTopologyUpdate.Address)
@@ -85,36 +86,26 @@ namespace Subnetwork
             {
                 snpp.Capacity += localTopologyUpdate.OccupiedCapacity;
 
-                LogClass.GreenLog("[RC]Received Topology: Added " + localTopologyUpdate.OccupiedCapacity + "Mbit/s to SNPP " + localTopologyUpdate.Address + ".");
+                LogClass.MagentaLog("[LRM -> RC] Topology: Deallocated " + localTopologyUpdate.OccupiedCapacity + "Mbit/s from SNPP " + localTopologyUpdate.Address + ".");
             }
             else
             {
                 snpp.Capacity -= localTopologyUpdate.OccupiedCapacity;
-                LogClass.MagentaLog("[RC]Received Topology: Removed " + localTopologyUpdate.OccupiedCapacity + "Mbit/s from SNPP " + localTopologyUpdate.Address + ".");
+                LogClass.GreenLog("[LRM -> RC] Topology: Allocated " + localTopologyUpdate.OccupiedCapacity + "Mbit/s to SNPP " + localTopologyUpdate.Address + ".");
             }
-            LogClass.WhiteLog("[RC] " + snpp.Capacity + "Mbit/s left on " + snpp.Address);
+            LogClass.WhiteLog("[LRM] " + snpp.Capacity + "Mbit/s left on " + snpp.Address);
         }
 
-
-        private void NetworkTopologyIn(SNPP localTopologyUpdate)
-        {
-
-        }
-
-        private void NetworkTopologyOut(SNPP localTopologyUpdate)
-        {
-
-        }
-
-        internal void AddSNPP(SNPP snpp)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void IgnoreLink(SNP snp)
+        public void IgnoreLink(SNP snp)
         {
             Link link = links.Find(x => (x.FirstSNPP.Address.Equals(snp.Address) || x.SecondSNPP.Address.Equals(snp.Address)));
-            link.ignore = true;
+            if(link!=null)
+                link.ignore = true;
+        }
+
+        internal void AddSNPP(SNPP sNPP)
+        {
+            throw new NotImplementedException();
         }
     }
 }

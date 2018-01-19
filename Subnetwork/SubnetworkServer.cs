@@ -22,6 +22,7 @@ namespace Subnetwork
         public const String DELETE_CONNECTION_REQUEST = "deleteRequest";
         public const String DELETE_PEER_COORDINATION = "deletePeerCoordination";
         public const String CALL_TEARDOWN = "callTeardown";
+        public const int MAX_REPETITIONS = 5;
         public const char PARAM_SEPARATOR = ' ';
         public const int SUBNETWORK_ADDRESS_POSITION = 0;
         public const int SUBNETWORK_MASK_POSITION = 1;
@@ -120,9 +121,9 @@ namespace Subnetwork
                 else if (nacked)
                 {
                     if (pathBegin.Deleting)
-                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't delete the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                        LogClass.MagentaLog("Subnetwork " + subnetworkAddress.subnetAddress + " can't delete the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     else
-                        LogClass.Log("Subnetwork " + subnetworkAddress.subnetAddress + " can't set up the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
+                        LogClass.MagentaLog("Subnetwork " + subnetworkAddress.subnetAddress + " can't set up the connection between: " + pathBegin.Address + " and " + pathEnd.Address);
                     nacked = false;
                     return false;
                 }
@@ -184,7 +185,8 @@ namespace Subnetwork
 
         private static bool callConnectionRequest(SNP pathBegin, SNP pathEnd)
         {
-            return connectionController.ConnectionRequestFromCC(pathBegin, pathEnd);
+            Boolean success = connectionController.ConnectionRequestFromCC(pathBegin, pathEnd);
+            return success;
         }
 
         public static CSocket GetSocketToDomain(string address)
@@ -267,83 +269,123 @@ namespace Subnetwork
                 ProcessConnectInformation(connected);
             while (true)
             {
-                Tuple<String, Object> received = connected.ReceiveObject();
-                String parameter = received.Item1;
-                Object receivedObject = received.Item2;
-                if (parameter.Equals(SNPP_SUBNETWORK_INFORMATION))
+                try
                 {
-                    InsertSNPPSToRC((List<SNPP>)receivedObject);
-                }
-                else if (parameter.Equals(CONNECTION_REQUEST_FROM_NCC))
-                {
-                    MessageParameters parameters = (MessageParameters)receivedObject;
-                    String sourceIP = parameters.getFirstParameter();
-                    String destinationIP = parameters.getSecondParameter();
-                    int capacity = parameters.getCapacity();
-                    LogClass.CyanLog("Received CONNECTION REQUEST from NCC.");
-                    bool success = connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
-                    String parentSubnetworkAddress = "127.0.0.1";
-                    CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
-                    SendACKorNACK(success, c);
+                    Tuple<String, Object> received = connected.ReceiveObject();
+                    String parameter = received.Item1;
+                    Object receivedObject = received.Item2;
+                    if (parameter.Equals(SNPP_SUBNETWORK_INFORMATION))
+                    {
+                        InsertSNPPSToRC((List<SNPP>)receivedObject);
+                    }
+                    else if (parameter.Equals(CONNECTION_REQUEST_FROM_NCC))
+                    {
+                        MessageParameters parameters = (MessageParameters)receivedObject;
+                        String sourceIP = parameters.getFirstParameter();
+                        String destinationIP = parameters.getSecondParameter();
+                        int capacity = parameters.getCapacity();
+                        Console.WriteLine("");
+                        LogClass.CyanLog("[NCC -> CC] Received CONNECTION REQUEST from NCC to set connection between " + sourceIP + " and " + destinationIP);
+                        bool success = false;
+                        for (int i = 0; i < MAX_REPETITIONS; i++)
+                        {
+                            if (!success)
+                            {
+                                success = connectionController.ConnectionRequestFromNCC(sourceIP, destinationIP, capacity);
+                            }
+                        }
+                        CallRCToRestoreLinks();
+                        String parentSubnetworkAddress = "127.0.0.1";
+                        CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
+                        SendACKorNACK(success, c);
+                        if (success)
+                            LogClass.GreenLog("Connection between " + sourceIP + " and " + destinationIP + " established properly");
+                        else
+                            LogClass.MagentaLog("Connection between " + sourceIP + " and " + destinationIP + " failed to be established");
 
-                }
-                else if (parameter.Equals(PEER_COORDINATION))
-                {
-                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
-                    LogClass.CyanLog("Received PEER COORDINATION from AS 1");
-                    bool success = connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
-                    SendACKorNACK(success, connected);
-                }
-                else if (parameter.Equals(DELETE_PEER_COORDINATION))
-                {
-                    Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
-                    LogClass.CyanLog("Received DELETE PEER COORDINATION from AS 1");
-                    bool success = connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
-                    SendACKorNACK(success, connected);
-                }
-                else if (parameter.Equals(NETWORK_TOPOLOGY))
-                {
+                    }
+                    else if (parameter.Equals(PEER_COORDINATION))
+                    {
+                        Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
+                        Console.WriteLine("");
+                        LogClass.CyanLog("[CC -> CC] Received PEER COORDINATION from AS 1 (" + receivedPair.Item1.Address + " - " + receivedPair.Item2 + ")");
+                        bool success = false;
+                        for (int i = 0; i < MAX_REPETITIONS; i++)
+                        {
+                            if (!success)
+                            {
+                                success = connectionController.PeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
+                            }
+                        }
+                        CallRCToRestoreLinks();
+                        SendACKorNACK(success, connected);
+                    }
+                    else if (parameter.Equals(DELETE_PEER_COORDINATION))
+                    {
+                        Tuple<SNP, string> receivedPair = (Tuple<SNP, string>)receivedObject;
+                        Console.WriteLine("");
+                        LogClass.CyanLog("[CC -> CC] Received DELETE PEER COORDINATION from AS 1 (" + receivedPair.Item1.Address + " - " + receivedPair.Item2 + ")");
+                        bool success = connectionController.DeletePeerCoordinationIn(receivedPair.Item1, receivedPair.Item2);
 
-                }
-                else if (parameter.Equals(CONNECTION_REQUEST_FROM_CC))
-                {
-                    Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
-                    SNP first = pathToAssign.Item1;
-                    SNP second = pathToAssign.Item2;
-                    LogClass.CyanLog("Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
-                    bool response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
-                    SendACKorNACK(response, connected);
+                        SendACKorNACK(success, connected);
+                    }
+                    else if (parameter.Equals(NETWORK_TOPOLOGY))
+                    {
 
+                    }
+                    else if (parameter.Equals(CONNECTION_REQUEST_FROM_CC))
+                    {
+                        Tuple<SNP, SNP> pathToAssign = (Tuple<SNP, SNP>)received.Item2;
+                        SNP first = pathToAssign.Item1;
+                        SNP second = pathToAssign.Item2;
+                        Console.WriteLine("");
+                        LogClass.CyanLog("[CC -> CC] Received CONNECTION REQUEST to set connection between " + first.Address + " and " + second.Address);
+                        bool response = false;
+                        for (int i = 0; i < MAX_REPETITIONS; i++)
+                        {
+                            if (!response)
+                                response = callConnectionRequest(pathToAssign.Item1, pathToAssign.Item2);
+                        }
+                        CallRCToRestoreLinks();
+                        if (response == false)
+                            LogClass.GreenLog("Can't set up connection between" + pathToAssign.Item1.Address + " and " + pathToAssign.Item2.Address);
+                        SendACKorNACK(response, connected);
+
+                    }
+                    else if (parameter.Equals(CALL_TEARDOWN))
+                    {
+                        MessageParameters parameters = (MessageParameters)receivedObject;
+                        String sourceIP = parameters.getFirstParameter();
+                        String destinationIP = parameters.getSecondParameter();
+                        Console.WriteLine("");
+                        LogClass.CyanLog("[NCC -> CC] Received TEARDOWN to deallocate connection between " + sourceIP + " and " + destinationIP);
+                        bool success = connectionController.DeleteConnection(sourceIP, destinationIP);
+                        String parentSubnetworkAddress = "127.0.0.1";
+                        CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
+                        SendACKorNACK(success, c);
+                    }
+                    else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
+                    {
+                        Tuple<SNP, SNP> pathToDelete = (Tuple<SNP, SNP>)received.Item2;
+                        string pathBegin = pathToDelete.Item1.Address;
+                        string pathEnd = pathToDelete.Item2.Address;
+                        Console.WriteLine("");
+                        LogClass.CyanLog("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
+                        bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
+                        SendACKorNACK(success, connected);
+                    }
+                    else if (parameter.Equals(CSocket.ACK_FUNCTION))
+                    {
+                        LogClass.CyanLog("[ACK] Received ACK");
+                        acked = true;
+                    }
+                    else if (parameter.Equals(CSocket.NACK_FUNCTION))
+                    {
+                        LogClass.CyanLog("[NACK] Received NACK");
+                        nacked = true;
+                    }
                 }
-                else if (parameter.Equals(CALL_TEARDOWN))
-                {
-                    MessageParameters parameters = (MessageParameters)receivedObject;
-                    String sourceIP = parameters.getFirstParameter();
-                    String destinationIP = parameters.getSecondParameter();
-                    LogClass.CyanLog("Received TEARDOWN to deallocate connection between " + sourceIP + " and " + destinationIP);
-                    bool success = connectionController.DeleteConnection(sourceIP, destinationIP);
-                    String parentSubnetworkAddress = "127.0.0.1";
-                    CSocket c = new CSocket(IPAddress.Parse(parentSubnetworkAddress), 40000, CSocket.CONNECT_FUNCTION);
-                    SendACKorNACK(success, c);
-                }
-                else if (parameter.Equals(DELETE_CONNECTION_REQUEST))
-                {
-                    Tuple<SNP, SNP> pathToDelete = (Tuple<SNP, SNP>)received.Item2;
-                    string pathBegin = pathToDelete.Item1.Address;
-                    string pathEnd = pathToDelete.Item2.Address;
-                    LogClass.CyanLog("Received DELETE CONNECTION REQUEST to delete connection between " + pathBegin + " and " + pathEnd);
-                    bool success = connectionController.DeleteConnection(pathBegin, pathEnd);
-                    SendACKorNACK(success, connected);
-                }
-                else if (parameter.Equals(CSocket.ACK_FUNCTION))
-                {
-                    LogClass.CyanLog("Received ACK");
-                    acked = true;
-                }
-                else if (parameter.Equals(CSocket.NACK_FUNCTION))
-                {
-                    LogClass.CyanLog("Received NACK");
-                    nacked = true;
+                catch (SocketException e) {
                 }
             }
         }
@@ -388,6 +430,11 @@ namespace Subnetwork
         internal static void callIgnoreLinkInRC(SNP snpPathBegin)
         {
             routingController.IgnoreLink(snpPathBegin);
+        }
+
+        public static void CallRCToRestoreLinks()
+        {
+            routingController.RestoreLinks();
         }
     }
 }

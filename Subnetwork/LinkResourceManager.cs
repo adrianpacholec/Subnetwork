@@ -95,7 +95,9 @@ namespace Subnetwork
             {
                 SNPP SNPPpathBegin = (SNPP)pathBegin;
                 SNPP SNPPpathEnd = (SNPP)pathEnd;
+                CustomSocket.LogClass.WhiteLog("[CC -> LRM] SNPLinkConnectionRequest (" + SNPPpathBegin.Address + " - " + SNPPpathEnd.Address + ")");
                 SNPpair = AllocateLink(SNPPpathBegin, SNPPpathEnd, capacity);
+
             }
 
             //jesli SNPPki są równe to znaczy ze są fejkowe i trzeba znaleźć SNPP o tym adresie
@@ -131,31 +133,52 @@ namespace Subnetwork
             {
                 SNP SNPpathBegin = (SNP)pathBegin;
                 SNP SNPpathEnd = (SNP)pathEnd;
+
                 RemoveLink(SNPpathBegin, SNPpathEnd);
             }
             return SNPpair;
 
         }
 
+        public void ShowDictionary()
+        {
+            foreach (var val in SNPsbySNPPaddress.Values)
+            {
+                foreach (SNP snp in val)
+                {
+                    CustomSocket.LogClass.WhiteLog("[DICT] for " + val + ": " + snp.Label + "  " + snp.OccupiedCapacity);
+                }
+            }
+        }
+
         private void RemoveLink(SNP SNPpathBegin, SNP SNPpathEnd)
         {
             List<SNP> existingSNPs = new List<SNP>();
 
+            //Links.Find(x => x.FirstSNPP.Address == SNPpathBegin.Address || x.SecondSNPP.Address == SNPpathBegin.Address);
+
             if (SNPsbySNPPaddress.ContainsKey(SNPpathBegin.Address))
             {
-                SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Address == SNPpathBegin.Address);
+                SNP BeginToBeDeleted = SNPsbySNPPaddress[SNPpathBegin.Address].Find(x => x.Label == SNPpathBegin.Label);
                 SNPsbySNPPaddress[SNPpathBegin.Address].Remove(BeginToBeDeleted);
-                Topology(SNPpathBegin);
-                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: deallocate " + SNPpathBegin.OccupiedCapacity + "Mbit/s on " + SNPpathBegin.Address);
+                if (Links.Find(x => x.FirstSNPP.Address == SNPpathBegin.Address || x.SecondSNPP.Address == SNPpathBegin.Address) != null)
+                {
+                    CustomSocket.LogClass.WhiteLog("[CC -> LRM] SNPLinkDeallocateRequest (" + SNPpathBegin.Address + " - " + SNPpathEnd.Address + ")");
+                    Topology(SNPpathBegin);
+                    //CustomSocket.LogClass.WhiteLog("[LRM -> RC] Sending topology update: deallocate " + SNPpathBegin.OccupiedCapacity + "Mbit/s on " + SNPpathBegin.Address);
+                }
             }
 
             if (SNPsbySNPPaddress.ContainsKey(SNPpathEnd.Address))
             {
-                SNP EndToBeDeleted = SNPsbySNPPaddress[SNPpathEnd.Address].Find(x => x.Address == SNPpathEnd.Address);
+                SNP EndToBeDeleted = SNPsbySNPPaddress[SNPpathEnd.Address].Find(x => x.Label == SNPpathEnd.Label);
                 SNPsbySNPPaddress[SNPpathEnd.Address].Remove(EndToBeDeleted);
-                Topology(SNPpathEnd);
-                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: deallocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
-
+                if (Links.Find(x => x.FirstSNPP.Address == SNPpathEnd.Address || x.SecondSNPP.Address == SNPpathEnd.Address) != null)
+                {
+                    CustomSocket.LogClass.WhiteLog("[CC -> LRM] SNPLinkDeallocateRequest (" + SNPpathBegin.Address + " - " + SNPpathEnd.Address + ")");
+                    Topology(SNPpathEnd);
+                    //CustomSocket.LogClass.WhiteLog("[LRM -> RC] Sending topology update: deallocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
+                }
             }
         }
 
@@ -182,7 +205,7 @@ namespace Subnetwork
             //tworzenie SNP poczatkowego SNPP
             SNPpathBegin = new SNP(potentiallyNewLabel, pathBegin.Address, capacity); //uses remembered label
             SNPsbySNPPaddress[pathBegin.Address].Add(SNPpathBegin);
-            CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate "+ SNPpathBegin.OccupiedCapacity + "Mbit/s on "+SNPpathBegin.Address);
+            //CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate " + SNPpathBegin.OccupiedCapacity + "Mbit/s on " + SNPpathBegin.Address);
             Topology(SNPpathBegin);
 
             if (pathBegin.Address != pathEnd.Address)
@@ -190,7 +213,7 @@ namespace Subnetwork
                 //tworzenie SNP koncowego SNPP
                 SNPpathEnd = new SNP(potentiallyNewLabel, pathEnd.Address, capacity); //uses generated label
                 SNPsbySNPPaddress[pathEnd.Address].Add(SNPpathEnd);
-                CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
+                // CustomSocket.LogClass.WhiteLog("[LRM] Sending topology update: allocate " + SNPpathEnd.OccupiedCapacity + "Mbit/s on " + SNPpathEnd.Address);
                 Topology(SNPpathEnd);
 
                 SNPpair = new Tuple<SNP, SNP>(SNPpathBegin, SNPpathEnd);

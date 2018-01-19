@@ -39,6 +39,7 @@ namespace Subnetwork
         {
             Vertex first = getVertex(firstVertexId, VertexList);
             Vertex second = getVertex(secondVertexId, VertexList);
+            if (capacity == 0)  capacity = 1;
             int weight = 1000000 / capacity;
             Edge created = new Edge(firstVertexId, secondVertexId, weight, capacity, first, second, false, ignore);
             EdgeList.Add(created);
@@ -174,8 +175,8 @@ namespace Subnetwork
             }
             catch (System.FormatException e)
             {
-                LogClass.WhiteLog("[RC] Can't find path with this capacity");
                 PathList.Remove(createdPath);
+                throw new FormatException();
             }
         }
 

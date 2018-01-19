@@ -31,25 +31,35 @@ namespace Subnetwork
                 decision = Console.ReadLine().Trim();
                 if (decision.StartsWith("kill"))
                 {
+                    Console.WriteLine("");
                     string[] killParams = decision.Split(' ');
                     string firstSNPaddress = killParams[1];
                     string secondSNPaddress = killParams[2];
-                    CustomSocket.LogClass.MagentaLog("Removing link: " + firstSNPaddress + " - " + secondSNPaddress);
-                   
-                    List<Tuple<string,string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress, secondSNPaddress);
-                    foreach (var path in pathsToReroute) {
-                        CustomSocket.LogClass.CyanLog("REMOVING: " + path.Item1 + " " + path.Item2 + " " + path.Item3);
+                    CustomSocket.LogClass.MagentaLog("Killing link: " + firstSNPaddress + " - " + secondSNPaddress);
+
+                    List<Tuple<string, string, int>> pathsToReroute = CC.GetPathsContainingThisSNP(firstSNPaddress, secondSNPaddress);
+                    foreach (var path in pathsToReroute)
+                    {
+                        Console.WriteLine("");
+                        CustomSocket.LogClass.CyanLog("REMOVING: " + path.Item1 + " " + path.Item2);
                         CC.DeleteConnection(path.Item1, path.Item2);
                         RC.DeleteLink(firstSNPaddress, secondSNPaddress);
+                        Console.WriteLine("");
+                        CustomSocket.LogClass.CyanLog("Received CONNECTION REQUEST to set connection between " + path.Item1 + " and " + path.Item2);
                         CC.ConnectionRequestFromNCC(path.Item1, path.Item2, path.Item3);
                     }
                 }
                 else if (decision.StartsWith("restore"))
                 {
+                    Console.WriteLine("");
                     string[] restoreParams = decision.Split(' ');
                     string firstSNPPaddress = restoreParams[1];
                     string secondSNPPaddress = restoreParams[2];
                     RC.RestoreLink(firstSNPPaddress, secondSNPPaddress);
+                }
+                else if (decision.StartsWith("lrm")) {
+                    Console.WriteLine("");
+                    LRM.ShowDictionary();
                 }
             }
             while (decision != "exit");

@@ -63,8 +63,7 @@ namespace Subnetwork
             }
             catch (FormatException e)
             {
-                LogClass.WhiteLog("[RC] Can't find path with this capacity");
-                return new List<SNPP>();
+                return null;
                 
             }           
             return translated;
